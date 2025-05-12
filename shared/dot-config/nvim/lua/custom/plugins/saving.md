@@ -1,0 +1,363 @@
+# lspconfig
+
+```lua
+  -- {
+  --   'neovim/nvim-lspconfig',
+  --   event = { 'BufReadPost', 'BufWritePost', 'BufNewFile' },
+  --   dependencies = {
+  --     { 'saghen/blink.cmp' },
+  --     {
+  --       'williamboman/mason-lspconfig.nvim',
+  --       commit = '4e806b2056ccad2e5ea2df663742c968c4856120',
+  --       config = function(_, opts) end,
+  --     },
+  --     { 'Hoffs/omnisharp-extended-lsp.nvim' },
+  --   },
+  --   opts = {
+  --     servers = {
+  --       omnisharp = {
+  --         enable_roslyn_analysers = true,
+  --         enable_import_completion = true,
+  --         organize_imports_on_format = true,
+  --         enable_decompilation_support = true,
+  --         filetypes = { 'cs', 'vb', 'csproj', 'sln', 'slnx', 'props', 'csx', 'targets' },
+  --       },
+  --       harper_ls = {
+  --         filetypes = {
+  --         },
+  --         settings = {
+  --           linters = {
+  --             spell_check = true,
+  --             inlayHints = { enabled = true },
+  --           },
+  --         },
+  --       },
+  --       lua_ls = {
+  --         settings = { Lua = { diagnostics = { globals = { 'vim' } } } },
+  --       },
+  --       tailwindcss = {
+  --         settings = {
+  --           tailwindCSS = {
+  --             experimental = {
+  --               classRegex = {
+  --                 { 'cva\\(([^)]*)\\)', '["\'`]([^"\'`]*).*?["\'`]' },
+  --               },
+  --             },
+  --           },
+  --         },
+  --       },
+  --       rust_analyzer = { enabled = false },
+  --       gopls = {
+  --         settings = {
+  --           gopls = {
+  --             buildFlags = { '-tags=integration' },
+  --             gofumpt = true,
+  --             codelenses = {
+  --               gc_details = true,
+  --               generate = true,
+  --               regenerate_cgo = true,
+  --               run_govulncheck = true,
+  --               test = true,
+  --               tidy = true,
+  --               upgrade_dependency = true,
+  --               vendor = true,
+  --             },
+  --             hints = {
+  --               assignVariableTypes = true,
+  --               compositeLiteralFields = true,
+  --               compositeLiteralTypes = true,
+  --               constantValues = false,
+  --               functionTypeParameters = true,
+  --               parameterNames = false,
+  --               rangeVariableTypes = true,
+  --             },
+  --             analyses = {
+  --               fieldalignment = false,
+  --               nilness = true,
+  --               unusedparams = true,
+  --               unusedwrite = true,
+  --               useany = true,
+  --             },
+  --             usePlaceholders = false,
+  --             completeUnimported = true,
+  --             staticcheck = true,
+  --             directoryFilters = { '-.git', '-.vscode', '-.idea', '-.vscode-test', '-node_modules' },
+  --             semanticTokens = true,
+  --           },
+  --         },
+  --       },
+  --       yamlls = {
+  --         settings = {
+  --           yaml = {
+  --             format = {
+  --               enable = false,
+  --             },
+  --             schemaStore = {
+  --               enable = false,
+  --               url = '',
+  --             },
+  --           },
+  --         },
+  --       },
+  --       vtsls = {
+  --         filetypes = {
+  --           'javascript',
+  --           'javascriptreact',
+  --           'javascript.jsx',
+  --           'typescript',
+  --           'typescriptreact',
+  --           'typescript.tsx',
+  --         },
+  --         settings = {
+  --           complete_function_calls = true,
+  --           vtsls = {
+  --             enableMoveToFileCodeAction = true,
+  --             autoUseWorkspaceTsdk = true,
+  --             experimental = {
+  --               maxInlayHintLength = 30,
+  --               completion = {
+  --                 enableServerSideFuzzyMatch = true,
+  --               },
+  --             },
+  --           },
+  --           typescript = {
+  --             updateImportsOnFileMove = { enabled = 'always' },
+  --             suggest = {
+  --               completeFunctionCalls = true,
+  --             },
+  --             inlayHints = {
+  --               enumMemberValues = { enabled = true },
+  --               functionLikeReturnTypes = { enabled = true },
+  --               parameterNames = { enabled = 'literals' },
+  --               parameterTypes = { enabled = true },
+  --               propertyDeclarationTypes = { enabled = true },
+  --               variableTypes = { enabled = false },
+  --             },
+  --           },
+  --         },
+  --       },
+  --     },
+  --   },
+  --   config = function(_, opts)
+  --     require('mason').setup()
+  --     local mason_lspconfig = require 'mason-lspconfig'
+  --     local lsp_config = require 'lspconfig'
+  --
+  --     local lsp_attach = function(client, bufnr)
+  --       -- if not client.server_capabilities.semanticTokensProvider then
+  --       --   local semantic = client.config.capabilities.textDocument.semanticTokens
+  --       --   client.server_capabilities.semanticTokensProvider = {
+  --       --     full = true,
+  --       --     legend = {
+  --       --       tokenTypes = semantic.tokenTypes,
+  --       --       tokenModifiers = semantic.tokenModifiers,
+  --       --     },
+  --       --     range = true,
+  --       --   }
+  --       -- end
+  --
+  --       local key_opts = { buffer = bufnr, remap = false }
+  --
+  --       vim.keymap.set('n', '<leader>1', function()
+  --         local params = vim.lsp.util.make_position_params()
+  --         params.context = { only = { 'gopls.doc.features' } }
+  --         local result = vim.lsp.buf_request_sync(0, 'textDocument/codeAction', params)
+  --         print(vim.inspect(result))
+  --       end, key_opts)
+  --
+  --       -- Keymaps
+  --       vim.keymap.set('n', 'K', vim.lsp.buf.hover, key_opts)
+  --       vim.keymap.set('n', '[d', vim.diagnostic.goto_next, key_opts)
+  --       vim.keymap.set('n', ']d', vim.diagnostic.goto_prev, key_opts)
+  --       vim.keymap.set('n', '<leader>0', vim.diagnostic.open_float, key_opts)
+  --       vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, { buffer = bufnr, remap = false, desc = 'Code Actions' })
+  --       vim.keymap.set('v', '<leader>ca', vim.lsp.buf.code_action, { buffer = bufnr, remap = false, desc = 'Code Actions' })
+  --       vim.keymap.set('n', '<leader>cr', vim.lsp.buf.rename, { buffer = bufnr, remap = false, desc = 'Rename' })
+  --
+  --       vim.keymap.set('n', '<leader>th', function()
+  --         vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
+  --         require('noice').redirect(function()
+  --           print('Hints Enabled: ' .. tostring(vim.lsp.inlay_hint.is_enabled()))
+  --         end, { view = 'notify' })
+  --       end, { buffer = bufnr, remap = false, desc = '[T]oggle [H]ints' })
+  --
+  --       vim.keymap.set('n', '<leader>td', function()
+  --         vim.diagnostic.enable(not vim.diagnostic.is_enabled())
+  --         require('noice').redirect(function()
+  --           print('Diagnostics Enabled: ' .. tostring(vim.diagnostic.is_enabled()))
+  --         end, { view = 'notify' })
+  --       end, { buffer = bufnr, remap = false, desc = '[T]oggle [D]iagnostics' })
+  --
+  --       -- vim.keymap.set('n', '<leader>ts', function()
+  --       --   vim.opt.spell = not vim.opt.spell:get()
+  --       --   require('noice').redirect(function()
+  --       --     print('Spell Check Enabled: ' .. tostring(vim.opt.spell:get()))
+  --       --   end, { view = 'notify' })
+  --       -- end, { buffer = bufnr, remap = false, desc = '[T]oggle [S]pellcheck' })
+  --
+  --       vim.keymap.set('i', '<C-h>', vim.lsp.buf.signature_help, key_opts)
+  --
+  --       if client.name ~= 'null-ls' then
+  --         client.server_capabilities.documentFormattingProvider = false
+  --       end
+  --     end
+  --
+  --     mason_lspconfig.setup {
+  --       ensure_installed = {
+  --         'cssls',
+  --         'emmet_ls',
+  --         'gopls',
+  --         'yamlls',
+  --         'bashls',
+  --         'clangd',
+  --         'omnisharp',
+  --         'vtsls',
+  --         'pyright',
+  --         'jsonls',
+  --         'lua_ls',
+  --         'tailwindcss',
+  --       },
+  --     }
+  --     local lsp_capabilities = require('blink.cmp').get_lsp_capabilities()
+  --     mason_lspconfig.setup_handlers {
+  --       function(server_name)
+  --         lsp_config[server_name].setup {
+  --           on_attach = lsp_attach,
+  --           capabilities = lsp_capabilities,
+  --           settings = opts.servers[server_name] and opts.servers[server_name].settings or {},
+  --         }
+  --       end,
+  --       ['harper_ls'] = function() end,
+  --       ['clangd'] = function() end,
+  --       ['bufls'] = function() end,
+  --       ['rust_analyzer'] = function() end,
+  --       ['omnisharp'] = function()
+  --       end,
+  --     }
+  --
+  --     vim.diagnostic.config {
+  --       underline = true,
+  --       update_in_insert = false,
+  --       virtual_text = false,
+  --       severity_sort = true,
+  --       float = {
+  --         focusable = true,
+  --         style = 'minimal',
+  --         border = 'rounded',
+  --         source = 'always',
+  --         header = '',
+  --         prefix = '',
+  --       },
+  --     }
+  --   end,
+  -- },
+```
+
+
+# rust stuff
+
+```lua
+  -- {
+  --   'Saecki/crates.nvim',
+  --   event = { 'BufRead Cargo.toml' },
+  --   opts = {
+  --     completion = {
+  --       crates = {
+  --         enabled = true,
+  --       },
+  --     },
+  --     lsp = {
+  --       enabled = true,
+  --       actions = true,
+  --       completion = true,
+  --       hover = true,
+  --     },
+  --   },
+  -- },
+  -- {
+  --   'mrcjkb/rustaceanvim',
+  --   version = '^5',
+  --   ft = { 'rust' },
+  --   opts = {
+  --     server = {
+  --       on_attach = function(_, bufnr)
+  --         vim.keymap.set('n', '<leader>ca', function()
+  --           vim.cmd.RustLsp 'codeAction'
+  --         end, { desc = 'Code Actions', buffer = bufnr })
+  --         vim.keymap.set('n', '<leader>xr', function()
+  --           vim.cmd.RustLsp 'debuggables'
+  --         end, { desc = 'Rust Debuggables', buffer = bufnr })
+  --         vim.keymap.set('n', '<leader>cr', vim.lsp.buf.rename, { buffer = bufnr, remap = false, desc = 'Rename' })
+  --         vim.keymap.set(
+  --           'n',
+  --           'K', -- Override Neovim's built-in hover keymap with rustaceanvim's hover actions
+  --           function()
+  --             vim.cmd.RustLsp { 'hover', 'actions' }
+  --           end,
+  --           { silent = true, buffer = bufnr }
+  --         )
+  --         vim.keymap.set('n', '<c-w>e', function()
+  --           vim.cmd.RustLsp { 'explainError', 'current' }
+  --         end, { desc = 'Explain Error', silent = true, buffer = bufnr })
+  --         vim.keymap.set('n', '<c-w>d', function()
+  --           vim.cmd.RustLsp { 'renderDiagnostic', 'current' }
+  --         end, { desc = 'Render Diagnostic', silent = true, buffer = bufnr })
+  --       end,
+  --       default_settings = {
+  --         -- rust-analyzer language server configuration
+  --         ['rust-analyzer'] = {
+  --           cargo = {
+  --             allFeatures = true,
+  --             loadOutDirsFromCheck = true,
+  --             buildScripts = {
+  --               enable = true,
+  --             },
+  --           },
+  --           -- Add clippy lints for Rust if using rust-analyzer
+  --           checkOnSave = true, -- diagnostics == 'rust-analyzer',
+  --           -- Enable diagnostics if using rust-analyzer
+  --           diagnostics = {
+  --             enable = true, --- diagnostics == 'rust-analyzer',
+  --           },
+  --           procMacro = {
+  --             enable = true,
+  --             ignored = {
+  --               -- ['async-trait'] = { 'async_trait' },
+  --               -- ['napi-derive'] = { 'napi' },
+  --               -- ['async-recursion'] = { 'async_recursion' },
+  --             },
+  --           },
+  --           files = {
+  --             excludeDirs = {
+  --               '.direnv',
+  --               '.git',
+  --               '.github',
+  --               '.gitlab',
+  --               'bin',
+  --               'node_modules',
+  --               'target',
+  --               'venv',
+  --               '.venv',
+  --             },
+  --           },
+  --         },
+  --       },
+  --     },
+  --   },
+  --   config = function(_, opts)
+  --     if true then --- if LazyVim.has 'mason.nvim' then
+  --       local package_path = require('mason-registry').get_package('codelldb'):get_install_path()
+  --       local codelldb = package_path .. '/extension/adapter/codelldb'
+  --       local library_path = package_path .. '/extension/lldb/lib/liblldb.dylib'
+  --       local uname = io.popen('uname'):read '*l'
+  --       if uname == 'Linux' then
+  --         library_path = package_path .. '/extension/lldb/lib/liblldb.so'
+  --       end
+  --       opts.dap = {
+  --         adapter = require('rustaceanvim.config').get_codelldb_adapter(codelldb, library_path),
+  --       }
+  --     end
+  --     vim.g.rustaceanvim = vim.tbl_deep_extend('keep', vim.g.rustaceanvim or {}, opts or {})
+  --   end,
+  -- },
+```
