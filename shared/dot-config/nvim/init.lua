@@ -295,6 +295,7 @@ vim.lsp.enable {
   'lua_ls',
   'terraform_ls',
   'buf',
+  'clangd',
 }
 
 -- The line beneath this is called `modeline`. See `:help modeline`
