@@ -44,4 +44,6 @@
 font-family = 0xProto Nerd Font
 font-size = 10
 
+scrollback-limit = 100000
+
 keybind= ctrl+shift+j=unbind
