@@ -292,8 +292,9 @@ vim.keymap.set('n', '<leader>L', '<cmd>Lazy<cr>', { desc = 'Open Lazy' })
 
 vim.lsp.enable {
   'gopls',
+  'golangci_lint_ls',
   'lua_ls',
-  'terraform_ls',
+  'terraformls',
   'buf',
   'clangd',
 }
