@@ -198,7 +198,7 @@ local M = {
         sh = { 'shfmt' },
         yaml = { 'yamlfmt' },
         json = { 'jq' },
-        hcl = { 'packer_fmt' },
+        hcl = { 'hcl' },
         terraform = { 'terraform_fmt' },
         ['terraform-vars'] = { 'terraform_fmt' },
         tf = { 'terraform_fmt' },
@@ -239,13 +239,6 @@ local M = {
         nls.builtins.code_actions.impl,
       })
     end,
-  },
-  {
-    'L3MON4D3/LuaSnip',
-    -- follow latest release.
-    version = 'v2.*', -- Replace <CurrentMajor> by the latest released major (first number of latest release)
-    -- install jsregexp (optional!).
-    build = 'make install_jsregexp',
   },
   { 'onsails/lspkind.nvim' },
 }

@@ -165,12 +165,12 @@ vim.api.nvim_create_autocmd('BufEnter', {
 })
 
 -- Set .nomad files to use HCL filetype
-vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-  pattern = "*.nomad",
+vim.api.nvim_create_autocmd({ 'BufRead', 'BufNewFile' }, {
+  pattern = '*.nomad',
   callback = function()
-    vim.bo.filetype = "hcl"
+    vim.bo.filetype = 'hcl'
   end,
-  desc = "Set .nomad files to use HCL filetype",
+  desc = 'Set .nomad files to use HCL filetype',
 })
 
 -- vim.api.nvim_create_autocmd('BufEnter', {

@@ -2,7 +2,7 @@ return {
   {
     'zbirenbaum/copilot.lua',
     cmd = 'Copilot',
-    enabled = false,
+    enabled = true,
     dependencies = { 'folke/snacks.nvim' },
     event = 'VeryLazy',
     build = ':Copilot auth',

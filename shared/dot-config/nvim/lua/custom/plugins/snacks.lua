@@ -94,7 +94,7 @@ return {
       {
         '<leader><space>',
         function()
-          require('snacks').picker.files { hidden = true }
+          require('snacks').picker.smart { hidden = true, filter = { cwd = true } }
         end,
         desc = 'Find Files',
       },
