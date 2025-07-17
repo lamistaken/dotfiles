@@ -40,10 +40,16 @@
 # # Some config options have unique syntaxes for their value,
 # # which is explained in the docs for that config option.
 # # Just for example:
-# resize-overlay-duration = 4s 200ms
-font-family = 0xProto Nerd Font
+# resize-overlay-duration = 5s 200ms
+font-family = "CaskaydiaMono Nerd Font Mono"
 font-size = 10
 
-scrollback-limit = 100000
+scrollback-limit=84000
 
 keybind= ctrl+shift+j=unbind
+window-decoration=false
+
+custom-shader = shaders/cursor_smear.glsl
+#
+shell-integration = zsh
+shell-integration-features = cursor,sudo,title
