@@ -78,6 +78,13 @@ return {
         desc = 'Buffers',
       },
       {
+        '<leader>gg',
+        function()
+          require('snacks').lazygit()
+        end,
+        desc = 'LazyGit',
+      },
+      {
         '<leader>,',
         function()
           require('snacks').picker.buffers()

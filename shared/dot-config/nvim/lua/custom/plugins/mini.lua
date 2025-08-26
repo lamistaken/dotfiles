@@ -44,8 +44,6 @@ return {
 
       require('mini.align').setup()
 
-      require('mini.pairs').setup()
-
       require('mini.bracketed').setup {
         conflict = { suffix = '' },
       }

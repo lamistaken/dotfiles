@@ -31,6 +31,10 @@ vim.opt.showmode = false
 -- vim.schedule(function()
 --   vim.opt.clipboard = 'unnamedplus'
 -- end)
+--
+
+-- Enable per-project configuration files
+vim.opt.exrc = true
 
 -- Enable break indent
 vim.opt.breakindent = true
@@ -304,8 +308,9 @@ vim.lsp.enable {
   'golangci_lint_ls',
   'lua_ls',
   'terraformls',
-  'buf',
+  'buf_ls',
   'clangd',
+  'pyright',
 }
 
 -- The line beneath this is called `modeline`. See `:help modeline`

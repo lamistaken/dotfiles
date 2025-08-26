@@ -193,8 +193,7 @@ local M = {
     opts = {
       formatters_by_ft = {
         lua = { 'stylua' },
-        go = { 'gofumpt', 'goimports' },
-        sql = { 'sqlfluff' },
+        go = { 'goimports', 'gofumpt' },
         sh = { 'shfmt' },
         yaml = { 'yamlfmt' },
         json = { 'jq' },
@@ -204,13 +203,14 @@ local M = {
         tf = { 'terraform_fmt' },
         proto = { 'buf' },
         rust = { 'rustfmt' },
+        sql = { 'sql_formatter' },
       },
       format_on_save = function(bufnr)
         -- Disable with a global or buffer-local variable
         if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
           return
         end
-        return { timeout_ms = 500, lsp_format = 'fallback' }
+        return { timeout_ms = 5000, lsp_format = 'fallback' }
       end,
     },
   },
@@ -242,17 +242,5 @@ local M = {
   },
   { 'onsails/lspkind.nvim' },
 }
-
--- Toggle diagnostic using L and show on save.
-local diag_shown = false
-vim.keymap.set('n', 'L', function()
-  if diag_shown then
-    diag_shown = false
-    vim.diagnostic.show(nil, nil, nil, { virtual_lines = false })
-  else
-    diag_shown = true
-    vim.diagnostic.show(nil, nil, nil, { virtual_lines = true })
-  end
-end, { remap = false, desc = 'Show diagnostic' })
 
 return M
