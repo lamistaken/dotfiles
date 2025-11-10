@@ -25,7 +25,7 @@ return {
     },
     opts = {
       ignore = {
-        filetype = { 'DiffviewFiles', 'oil' },
+        filetype = { 'DiffviewFiles', 'oil', 'sidekick_terminal' },
         buftype = { 'acwrite', 'nofile' },
       },
     },
