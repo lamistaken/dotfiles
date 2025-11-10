@@ -1,7 +1,10 @@
 return {
   {
     'folke/snacks.nvim',
+    lazy = false,
+    priority = 1000,
     opts = {
+      gh = {},
       picker = {
         formatters = {
           file = {
@@ -315,6 +318,34 @@ return {
           require('snacks').picker.pickers()
         end,
         desc = 'Pickers',
+      },
+      {
+        '<leader>j',
+        function()
+          require('snacks').terminal.open 'jjui'
+        end,
+        desc = 'Open jjui',
+      },
+      {
+        '<leader>gh',
+        function()
+          require('snacks').terminal.open 'gh dash'
+        end,
+        desc = 'Open gh-dash',
+      },
+      {
+        '<leader>gp',
+        function()
+          require('snacks').picker.gh_pr()
+        end,
+        desc = 'GitHub Pull Requests (open)',
+      },
+      {
+        '<leader>gP',
+        function()
+          require('snacks').picker.gh_pr { state = 'all' }
+        end,
+        desc = 'GitHub Pull Requests (all)',
       },
     },
     init = function()
