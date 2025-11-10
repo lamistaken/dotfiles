@@ -2,7 +2,7 @@ return {
   {
     'zbirenbaum/copilot.lua',
     cmd = 'Copilot',
-    enabled = true,
+    enabled = false,
     dependencies = { 'folke/snacks.nvim' },
     event = 'VeryLazy',
     build = ':Copilot auth',
@@ -49,6 +49,7 @@ return {
   },
   {
     'CopilotC-Nvim/CopilotChat.nvim',
+    enabled = false,
     branch = 'main',
     cmd = 'CopilotChat',
     opts = function()
