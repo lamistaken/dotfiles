@@ -105,6 +105,17 @@ window#waybar {
   color: @foreground;
 }
 
+/* Google Calendar module styles */
+#custom-gcalendar.meeting-idle {
+  padding: 6px;
+  color: @foreground;
+}
+
+#custom-gcalendar.meeting-active {
+  padding: 6px;
+  color: @red;
+}
+
 #battery.warning,
 #disk.warning,
 #memory.warning,
