@@ -21,6 +21,8 @@ vim.opt.relativenumber = false
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
 
+vim.opt.conceallevel = 1
+
 -- Don't show the mode, since it's already in the status line
 vim.opt.showmode = false
 
@@ -74,6 +76,9 @@ vim.opt.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 25
+
+-- Show more context in diff mode
+vim.opt.diffopt = 'internal,filler,closeoff,linematch:40,context:50'
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
@@ -177,12 +182,11 @@ vim.api.nvim_create_autocmd({ 'BufRead', 'BufNewFile' }, {
   desc = 'Set .nomad files to use HCL filetype',
 })
 
--- vim.api.nvim_create_autocmd('BufEnter', {
---   desc = 'File type debug',
---   callback = function()
---     print('BufType: ' .. vim.bo.buftype)
---   end,
--- })
+-- Disable folding in database result window.
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'dbout',
+  command = [[setlocal nofoldenable]],
+})
 
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
@@ -311,6 +315,7 @@ vim.lsp.enable {
   'buf_ls',
   'clangd',
   'pyright',
+  'qmlls',
 }
 
 -- The line beneath this is called `modeline`. See `:help modeline`

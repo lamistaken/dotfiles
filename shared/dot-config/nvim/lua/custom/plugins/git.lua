@@ -1,5 +1,6 @@
 return {
   {
+    dir = vim.fn.isdirectory(vim.fn.expand '~/repos/diffview.nvim') == 1 and '~/repos/diffview.nvim/' or nil,
     'sindrets/diffview.nvim',
     cmd = { 'DiffviewOpen', 'DiffviewFileHistory' },
     keys = {
@@ -89,5 +90,15 @@ return {
       { '<leader>gf', '<cmd>:OpenInGHFile<cr>', desc = 'Open File in GitHub' },
       { '<leader>gl', '<cmd>:OpenInGHFileLines<cr>', desc = 'Open File Lines in GitHub' },
     },
+  },
+  {
+    'rafikdraoui/jj-diffconflicts',
+  },
+  {
+    'julienvincent/hunk.nvim',
+    cmd = { 'DiffEditor' },
+    config = function()
+      require('hunk').setup()
+    end,
   },
 }
