@@ -7,8 +7,9 @@ return {
     },
     keys = {
       { '<leader>yy', '"+yy', mode = { 'n', 'v', 'x' }, desc = 'Yank line to clipboard' },
-      { '<leader>yp', '<Plug>(YankyPutAfter)', mode = { 'n', 'v', 'x' }, desc = 'Put Text After Cursor' },
-      { '<leader>yP', '<Plug>(YankyPutBefore)', mode = { 'n', 'v', 'x' }, desc = 'Put Text Before Cursor' },
+      -- { 'y', '<Plug>(YankyYank)', mode = { 'n', 'x' }, desc = 'Yank text' },
+      -- { 'p', '<Plug>(YankyPutAfter)', mode = { 'n', 'x' }, desc = 'Put yanked text after cursor' },
+      -- { 'P', '<Plug>(YankyPutBefore)', mode = { 'n', 'x' }, desc = 'Put yanked text before cursor' },
       {
         '<leader>yf',
         function()

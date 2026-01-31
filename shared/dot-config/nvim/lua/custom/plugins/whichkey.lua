@@ -66,6 +66,7 @@ return {
           vim.cmd 'tabnext'
         end,
         desc = 'Move to the next tab',
+        mode = { 'n' },
       },
       {
         'g<S-Tab>',
@@ -73,6 +74,7 @@ return {
           vim.cmd 'tabprevious'
         end,
         desc = 'Move to the previous tab',
+        mode = { 'n' },
       },
     },
   },

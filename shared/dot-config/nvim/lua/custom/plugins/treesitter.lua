@@ -34,6 +34,26 @@ return {
           additional_vim_regex_highlighting = { 'ruby' },
         },
         indent = { enable = true, disable = { 'ruby' } },
+        textobjects = {
+          select = {
+            enable = true,
+            lookahead = true,
+            keymaps = {
+              ['aa'] = '@parameter.outer',
+              ['ia'] = '@parameter.inner',
+            },
+          },
+          move = {
+            enable = true,
+            set_jumps = true,
+            goto_next_start = {
+              [']a'] = '@parameter.inner',
+            },
+            goto_previous_start = {
+              ['[a'] = '@parameter.inner',
+            },
+          },
+        },
       }
     end,
     opts = {},

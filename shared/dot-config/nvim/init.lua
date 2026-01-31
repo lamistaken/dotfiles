@@ -21,7 +21,7 @@ vim.opt.relativenumber = false
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
 
-vim.opt.conceallevel = 1
+-- vim.opt.conceallevel = 1
 
 -- Don't show the mode, since it's already in the status line
 vim.opt.showmode = false
@@ -78,7 +78,8 @@ vim.opt.cursorline = true
 vim.opt.scrolloff = 25
 
 -- Show more context in diff mode
-vim.opt.diffopt = 'internal,filler,closeoff,linematch:40,context:50'
+-- vim.opt.diffopt = 'internal,filler,closeoff,linematch:25,context:25'
+vim.opt.diffopt = 'internal,filler,closeoff,indent-heuristic,linematch:60,algorithm:histogram'
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
@@ -155,6 +156,13 @@ vim.api.nvim_create_autocmd('RecordingLeave', {
     print 'Recording stopped'
   end,
 })
+
+-- vim.api.nvim_create_autocmd('BufEnter', {
+--   desc = 'File type debug',
+--   callback = function()
+--     print('BufType: ' .. vim.bo.buftype .. '\nFileType: ' .. vim.bo.filetype)
+--   end,
+-- })
 
 -- Update tmux window name to the opened file
 vim.api.nvim_create_autocmd('BufEnter', {
@@ -316,7 +324,37 @@ vim.lsp.enable {
   'clangd',
   'pyright',
   'qmlls',
+  'marksman',
 }
+
+-- Override default ]d/[d/]D/[D to skip Harper grammar diagnostics.
+-- vim.diagnostic.jump doesn't support a source filter, so we exclude
+-- Harper's diagnostic namespace(s) by ID instead.
+local function non_harper_ns()
+  local ns_ids = {}
+  for id, ns in pairs(vim.diagnostic.get_namespaces()) do
+    if not ns.name:find('harper', 1, true) then
+      ns_ids[#ns_ids + 1] = id
+    end
+  end
+  return #ns_ids > 0 and ns_ids or nil
+end
+
+vim.keymap.set('n', ']d', function()
+  vim.diagnostic.jump { count = vim.v.count1, namespace = non_harper_ns() }
+end, { desc = 'Next diagnostic (skip Harper)' })
+
+vim.keymap.set('n', '[d', function()
+  vim.diagnostic.jump { count = -vim.v.count1, namespace = non_harper_ns() }
+end, { desc = 'Prev diagnostic (skip Harper)' })
+
+vim.keymap.set('n', ']D', function()
+  vim.diagnostic.jump { count = math.huge, wrap = false, namespace = non_harper_ns() }
+end, { desc = 'Last diagnostic (skip Harper)' })
+
+vim.keymap.set('n', '[D', function()
+  vim.diagnostic.jump { count = -math.huge, wrap = false, namespace = non_harper_ns() }
+end, { desc = 'First diagnostic (skip Harper)' })
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et

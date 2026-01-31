@@ -3,6 +3,18 @@ return {
     'folke/trouble.nvim',
     opts = {
       modes = {
+        diagnostics = {
+          -- Exclude Harper grammar diagnostics from the Trouble list
+          filter = function(items)
+            local ret = {}
+            for _, item in ipairs(items) do
+              if not (item.item and item.item.source == 'Harper') then
+                ret[#ret + 1] = item
+              end
+            end
+            return ret
+          end,
+        },
         symbols = {
           win = { position = 'left' },
         },

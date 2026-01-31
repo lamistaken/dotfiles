@@ -46,6 +46,7 @@ return {
 
       require('mini.bracketed').setup {
         conflict = { suffix = '' },
+        diagnostic = { suffix = '' }, -- Use custom ]d/[d in init.lua to skip Harper
       }
     end,
   },

@@ -1,3 +1,41 @@
+local function symbol_filter_opts(title_prefix)
+  local filter_presets = {
+    {
+      name = 'Default',
+      filter = {
+        'Class', 'Constructor', 'Enum', 'Field', 'Function',
+        'Interface', 'Method', 'Module', 'Namespace', 'Package',
+        'Property', 'Struct', 'Trait',
+      },
+    },
+    { name = 'Functions/Methods', filter = { 'Function', 'Method', 'Constructor' } },
+    { name = 'Types', filter = { 'Class', 'Struct', 'Enum', 'Interface', 'TypeParameter', 'Trait' } },
+    { name = 'Variables/Fields', filter = { 'Variable', 'Constant', 'Field', 'Property' } },
+    { name = 'All', filter = true },
+  }
+  local preset_idx = 1
+
+  return {
+    actions = {
+      cycle_filter = function(picker)
+        preset_idx = (preset_idx % #filter_presets) + 1
+        local preset = filter_presets[preset_idx]
+        picker.opts.filter.default = preset.filter
+        picker.title = title_prefix .. ' [' .. preset.name .. ']'
+        picker:update_titles()
+        picker:find()
+      end,
+    },
+    win = {
+      input = {
+        keys = {
+          ['<A-s>'] = { 'cycle_filter', mode = { 'n', 'i' }, desc = 'Cycle Symbol Filter' },
+        },
+      },
+    },
+  }
+end
+
 return {
   {
     'folke/snacks.nvim',
@@ -281,16 +319,30 @@ return {
       {
         'gO',
         function()
-          require('snacks').picker.lsp_symbols()
+          require('snacks').picker.lsp_symbols(symbol_filter_opts('Symbols'))
         end,
         desc = 'LSP Document Symbols',
       },
       {
-        'gW',
+        '<leader>so',
         function()
-          require('snacks').picker.lsp_workspace_symbols()
+          require('snacks').picker.lsp_workspace_symbols(symbol_filter_opts('Workspace Symbols'))
         end,
         desc = 'LSP Workspace Symbols',
+      },
+      {
+        '<leader>st',
+        function()
+          require('snacks').picker.lsp_workspace_symbols {
+            filter = {
+              default = true,
+            },
+            transform = function(item)
+              return item.name and item.name:match '^Tag: ' ~= nil
+            end,
+          }
+        end,
+        desc = 'LSP Workspace Tags (Marksman)',
       },
       {
         '<leader>sz',

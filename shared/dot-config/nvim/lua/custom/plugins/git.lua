@@ -1,6 +1,5 @@
 return {
   {
-    dir = vim.fn.isdirectory(vim.fn.expand '~/repos/diffview.nvim') == 1 and '~/repos/diffview.nvim/' or nil,
     'sindrets/diffview.nvim',
     cmd = { 'DiffviewOpen', 'DiffviewFileHistory' },
     keys = {
@@ -105,6 +104,43 @@ return {
     'esmuellert/codediff.nvim',
     dependencies = { 'MunifTanjim/nui.nvim' },
     cmd = 'CodeDiff',
+    opts = {
+      explorer = {
+        view_mode = 'tree',
+        file_filter = {
+          ignore = { '**/*.png', '**/samples-server' },
+        },
+      },
+      keymaps = {
+        view = {
+          next_file = '<tab>',
+          prev_file = '<s-tab>',
+          open_in_prev_tab = 'gf',
+        },
+      },
+    },
+    config = function(_, opts)
+      require('codediff').setup(opts)
+
+      -- Fix: codediff leaks scrollbind to windows outside the diff tab.
+      -- When entering a non-codediff tab, reset scrollbind on all its windows.
+      -- This handles both closing the diff and navigating away (e.g. gf).
+      vim.api.nvim_create_autocmd('TabEnter', {
+        callback = function()
+          vim.schedule(function()
+            local tab = vim.api.nvim_get_current_tabpage()
+            for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tab)) do
+              if vim.w[win].codediff_restore then
+                return
+              end
+            end
+            for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tab)) do
+              vim.wo[win].scrollbind = false
+            end
+          end)
+        end,
+      })
+    end,
   },
   {
     'nicolasgb/jj.nvim',
@@ -114,7 +150,6 @@ return {
       'esmuellert/codediff.nvim',
       'sindrets/diffview.nvim',
     },
-
     config = function()
       require('jj').setup {
         diff = {
@@ -122,5 +157,44 @@ return {
         },
       }
     end,
+    cmd = { 'Jdiff' },
+    keys = {
+      {
+        '<leader>jj',
+        '<cmd>J<cr>',
+        desc = 'Jujutsu Overview',
+      },
+      {
+        '<leader>ja',
+        '<cmd>J annotate_line<cr>',
+        desc = 'Jujutsu Annotate Line',
+      },
+      {
+        '<leader>jA',
+        '<cmd>J annotate<cr>',
+        desc = 'Jujutsu Annotate File',
+      },
+      {
+        '<leader>jl',
+        '<cmd>J log<cr>',
+        desc = 'Jujutsu Log',
+      },
+      {
+        '<leader>jd',
+        function()
+          require('snacks.input').input({ prompt = 'From revision', default = 'trunk()' }, function(value)
+            require('jj.diff').diff_revisions { left = value, right = '@' }
+          end)
+        end,
+        desc = 'Jujutsu Diff',
+      },
+      {
+        '<leader>jf',
+        function()
+          require('jj.picker').file_history()
+        end,
+        desc = 'Jujutsu File History',
+      },
+    },
   },
 }
