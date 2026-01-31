@@ -101,4 +101,26 @@ return {
       require('hunk').setup()
     end,
   },
+  {
+    'esmuellert/codediff.nvim',
+    dependencies = { 'MunifTanjim/nui.nvim' },
+    cmd = 'CodeDiff',
+  },
+  {
+    'nicolasgb/jj.nvim',
+    branch = 'main',
+    dependencies = {
+      'folke/snacks.nvim', -- Optional, only needed if you use pickers
+      'esmuellert/codediff.nvim',
+      'sindrets/diffview.nvim',
+    },
+
+    config = function()
+      require('jj').setup {
+        diff = {
+          backend = 'codediff',
+        },
+      }
+    end,
+  },
 }
