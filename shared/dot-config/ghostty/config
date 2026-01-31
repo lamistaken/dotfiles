@@ -43,17 +43,22 @@
 # resize-overlay-duration = 5s 200ms
 #
 theme = Kanagawa Wave
+
 font-family = "JetBrainsMonoNL Nerd Font"
 font-style = Medium
 font-style-bold = ExtraBold
 font-size = 10
+font-thicken = true
+font-feature = ss02
+font-feature = ss04
+font-feature = -calt
 
-scrollback-limit=84000
+scrollback-limit=100000000
 
 keybind= ctrl+shift+j=unbind
 window-decoration=false
+keybind= ctrl+comma=unbind
 
 custom-shader = shaders/cursor_smear.glsl
-#
 shell-integration = zsh
 shell-integration-features = cursor,sudo,title
