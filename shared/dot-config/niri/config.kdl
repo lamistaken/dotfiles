@@ -30,7 +30,7 @@ input {
     touchpad {
         // off
         tap
-        // dwt
+        dwt
         // dwtp
         // drag false
         // drag-lock
@@ -296,7 +296,7 @@ hotkey-overlay {
 // Additionally, clients will be informed that they are tiled, removing some client-side rounded corners.
 // This option will also fix border/focus ring drawing behind some semitransparent windows.
 // After enabling or disabling this, you need to restart the apps for this to take effect.
-// prefer-no-csd
+prefer-no-csd
 
 // You can change the path where screenshots are saved.
 // A ~ at the front will be expanded to the home directory.
@@ -455,8 +455,8 @@ binds {
     Mod+Shift+K     { move-window-up; }
     Mod+Shift+L     { move-column-right; }
 
-    Mod+G { focus-column-first; }
-    Mod+Shift+G  { focus-column-last; }
+    Mod+G { spawn "slack"; }
+    // Mod+Shift+G  { focus-column-last; }
     // Mod+Ctrl+Home { move-column-to-first; }
     // Mod+Ctrl+End  { move-column-to-last; }
 
@@ -623,10 +623,6 @@ debug {
     ignore-drm-device "/dev/dri/card0"
 }
 
-switch-events {
-    lid-close { spawn "dms" "ipc" "call" "lock" "lock"; }
-}
-
 recent-windows {
     // Pre-select the "Output" scope when switching windows.
     binds {
@@ -639,5 +635,11 @@ include "dms/colors.kdl"
 include "dms/layout.kdl"
 include "dms/alttab.kdl"
 include "dms/binds.kdl"
-
 include "dms/cursor.kdl"
+
+// Override DMS catch-all draw-border-with-background for Ghostty.
+// Without this, the command palette dialog renders as transparent.
+window-rule {
+    match app-id="com.mitchellh.ghostty"
+    draw-border-with-background true
+}
