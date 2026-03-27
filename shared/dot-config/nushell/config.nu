@@ -17,7 +17,17 @@
 # You can remove these comments if you want or leave
 # them for future reference.
 
+let carapace_completer = {|spans: list<string>|
+    carapace $spans.0 nushell ...$spans | from json
+}
+
 $env.config = {
+  completions: {
+    external: {
+      enable: true
+      completer: $carapace_completer
+    }
+  }
   hooks: {
     pre_prompt: [
       { ||
@@ -51,7 +61,6 @@ $env.config = {
 $env.XDG_PICTURES_DIR = $'($env.HOME)/Pictures'
 
 source ~/.local/share/atuin/init.nu
-source completions-jj.nu
 source kanagawa.nu
 source jj.nu
 source work.nu

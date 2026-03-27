@@ -1,0 +1,6 @@
+editor: "nvim"
+ui:
+  line_numbers: "hybrid"
+  theme: "git"
+  diff_add_bg: "#2b3328" # Optional: Custom background for added lines
+  diff_del_bg: "#4a2323" # Optional: Custom background for deleted lines

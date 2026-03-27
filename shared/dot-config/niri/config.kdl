@@ -104,23 +104,13 @@ input {
     position x=1280 y=0
 }
 
-output "eDP-1" {
-    // mode "2560x1440@165"
-    // Niri uses mode or scale
-    // scale 2.0
-    // position x=0 y=0
-}
-
-output "Samsung Electric Company LS49AG95 HNTR800769" {
-    mode "5120x1440@59.977"
-}
 
 // Settings that influence how windows are positioned and sized.
 // Find more information on the wiki:
 // https://yalter.github.io/niri/Configuration:-Layout
 layout {
     // Set gaps around windows in logical pixels.
-    gaps 16
+    gaps 24
 
     // When to center a column when changing focus, options are:
     // - "never", default behavior, focusing an off-screen column will keep at the left
@@ -268,6 +258,33 @@ layout {
         // right 64
         // top 64
         // bottom 64
+    }
+}
+
+output "eDP-1" {
+    // mode "2560x1440@165"
+    // Niri uses mode or scale
+    // scale 2.0
+    // position x=0 y=0
+    layout {
+        struts {
+            left 64
+            right 64
+        }
+    }
+}
+
+output "Samsung Electric Company LS49AG95 HNTR800769" {
+    mode "5120x1440@59.977"
+    layout {
+        gaps 15
+        struts {
+            left 640
+            right 640
+        }
+        focus-ring {
+            width 3
+        }
     }
 }
 
