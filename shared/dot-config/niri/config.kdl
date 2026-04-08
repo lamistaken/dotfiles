@@ -279,8 +279,8 @@ output "Samsung Electric Company LS49AG95 HNTR800769" {
     layout {
         gaps 15
         struts {
-            left 640
-            right 640
+            left 1040
+            right 240
         }
         focus-ring {
             width 3
@@ -389,6 +389,9 @@ binds {
 
     Mod+T {
         set-dynamic-cast-window;
+    }
+    Mod+M {
+        spawn "handy" "--toggle-transcription"
     }
 
     Mod+Shift+C {
