@@ -15,6 +15,12 @@ return {
           next = '<C-Space>',
         },
       }
+
+      -- Terminal mode keymaps (for sidekick/terminal buffers)
+      vim.keymap.set('t', '<C-h>', [[<C-\><C-n>:lua require'nvim-tmux-navigation'.NvimTmuxNavigateLeft()<CR>]], { silent = true })
+      vim.keymap.set('t', '<C-j>', [[<C-\><C-n>:lua require'nvim-tmux-navigation'.NvimTmuxNavigateDown()<CR>]], { silent = true })
+      vim.keymap.set('t', '<C-k>', [[<C-\><C-n>:lua require'nvim-tmux-navigation'.NvimTmuxNavigateUp()<CR>]], { silent = true })
+      vim.keymap.set('t', '<C-l>', [[<C-\><C-n>:lua require'nvim-tmux-navigation'.NvimTmuxNavigateRight()<CR>]], { silent = true })
     end,
   },
 }

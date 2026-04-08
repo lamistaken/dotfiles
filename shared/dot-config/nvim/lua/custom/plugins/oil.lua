@@ -1,3 +1,38 @@
+local function delete_oil_deleted_buffers(args)
+  local data = args.data or {}
+
+  if data.err then
+    return
+  end
+
+  local deleted_paths = {}
+  for _, action in ipairs(data.actions or {}) do
+    if action.type == 'delete' then
+      local _, path = require('oil.util').parse_url(action.url)
+      if path then
+        deleted_paths[vim.fs.normalize(vim.fs.abspath(path))] = true
+      end
+    end
+  end
+
+  if vim.tbl_isempty(deleted_paths) then
+    return
+  end
+
+  local bufdelete = require 'snacks.bufdelete'
+  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == '' then
+      local bufname = vim.api.nvim_buf_get_name(bufnr)
+      if bufname ~= '' then
+        local path = vim.fs.normalize(vim.fs.abspath(bufname))
+        if deleted_paths[path] then
+          bufdelete.delete { buf = bufnr, force = true }
+        end
+      end
+    end
+  end
+end
+
 return {
   'stevearc/oil.nvim',
   keys = { {
@@ -7,6 +42,16 @@ return {
     end,
     desc = 'Open oil',
   } },
+  init = function()
+    local group = vim.api.nvim_create_augroup('oil_buffer_cleanup', { clear = true })
+
+    vim.api.nvim_create_autocmd('User', {
+      group = group,
+      pattern = 'OilActionsPost',
+      callback = delete_oil_deleted_buffers,
+      desc = 'Delete file buffers after Oil removes files',
+    })
+  end,
   opts = {
     -- Oil will take over directory buffers (e.g. `vim .` or `:e src/`)
     -- Set to false if you want some other plugin (e.g. netrw) to open when you edit directories.

@@ -6,6 +6,8 @@ vim.keymap.set('n', '<leader>grn', vim.lsp.buf.rename, { remap = false, desc = '
 local idx = 1
 local sf_size = 4
 
+vim.diagnostic.config { folds = { enabled = true }, codelens = { enabled = true } }
+
 local M = {
   {
     'neovim/nvim-lspconfig',
@@ -223,16 +225,16 @@ local M = {
     opts = { ensure_installed = { 'delve', 'gomodifytags', 'impl' } },
   },
   -- This doesn't seem to be working with none-ls :(
-  {
-    'ThePrimeagen/refactoring.nvim',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      'nvim-treesitter/nvim-treesitter',
-    },
-    config = function()
-      require('refactoring').setup()
-    end,
-  },
+  -- {
+  --   'ThePrimeagen/refactoring.nvim',
+  --   dependencies = {
+  --     'nvim-lua/plenary.nvim',
+  --     'nvim-treesitter/nvim-treesitter',
+  --   },
+  --   config = function()
+  --     require('refactoring').setup()
+  --   end,
+  -- },
   {
     'nvimtools/none-ls.nvim',
     dependencies = { 'ThePrimeagen/refactoring.nvim' },

@@ -38,4 +38,18 @@ return {
       vim.api.nvim_create_user_command('PeekClose', require('peek').close, {})
     end,
   },
+  {
+    'iamcco/markdown-preview.nvim',
+    cmd = { 'MarkdownPreviewToggle', 'MarkdownPreview', 'MarkdownPreviewStop' },
+    ft = { 'markdown' },
+    build = 'cd app && npm install',
+    keys = {
+      {
+        '<leader>cp',
+        ft = 'markdown',
+        '<cmd>MarkdownPreviewToggle<cr>',
+        desc = 'Markdown Preview',
+      },
+    },
+  },
 }

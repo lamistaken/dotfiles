@@ -105,22 +105,58 @@ return {
     dependencies = { 'MunifTanjim/nui.nvim' },
     cmd = 'CodeDiff',
     opts = {
+      diff = {
+        compute_moves = true,
+      },
       explorer = {
         view_mode = 'tree',
         file_filter = {
-          ignore = { '**/*.png', '**/samples-server' },
+          ignore = { '**/*.png', '**/samples-server', '.jj/**' },
         },
       },
       keymaps = {
         view = {
           next_file = '<tab>',
           prev_file = '<s-tab>',
-          open_in_prev_tab = 'gf',
+          open_in_prev_tab = '<Plug>(CodeDiffOpenPrevTab)',
         },
       },
     },
     config = function(_, opts)
       require('codediff').setup(opts)
+
+      -- Custom gf: close jj log window (winfixbuf terminal) before delegating
+      -- to codediff's built-in open_in_prev_tab handler.
+      vim.api.nvim_create_autocmd('BufWinEnter', {
+        callback = function(ev)
+          vim.schedule(function()
+            if not vim.api.nvim_buf_is_valid(ev.buf) then
+              return
+            end
+            local ok, lifecycle = pcall(require, 'codediff.ui.lifecycle')
+            if not ok then
+              return
+            end
+            local tabpage = vim.api.nvim_get_current_tabpage()
+            if not lifecycle.get_session(tabpage) then
+              return
+            end
+
+            vim.keymap.set('n', 'gf', function()
+              local ok, terminal = pcall(require, 'jj.ui.terminal')
+              if ok and terminal.state and terminal.state.buf and vim.api.nvim_buf_is_valid(terminal.state.buf) then
+                for _, win in ipairs(vim.api.nvim_list_wins()) do
+                  if vim.api.nvim_win_get_buf(win) == terminal.state.buf then
+                    vim.api.nvim_win_close(win, true)
+                  end
+                end
+              end
+              local keys = vim.api.nvim_replace_termcodes('<Plug>(CodeDiffOpenPrevTab)', true, true, true)
+              vim.api.nvim_feedkeys(keys, 'm', false)
+            end, { buffer = ev.buf, desc = 'Open in prev tab (close jj log first)' })
+          end)
+        end,
+      })
 
       -- Fix: codediff leaks scrollbind to windows outside the diff tab.
       -- When entering a non-codediff tab, reset scrollbind on all its windows.
