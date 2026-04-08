@@ -42,7 +42,7 @@ def "jj review pr" [bookmark: string] {
   if $bookmark != "HEAD" {
     # Fetch latest changes and rebase my current work on top of main
     ^jj git fetch
-    jj rebase main
+    # jj rebase main
 
     # Check out the new bookmark for the PR
     ^jj bm track $"($bookmark)@origin"
@@ -50,9 +50,10 @@ def "jj review pr" [bookmark: string] {
   }
 
   # Open a diff view between the fork point and HEAD
-  let base = (^jj log --no-graph -r 'fork_point(@ | trunk())' -T 'commit_id.short()')
+  # let base = (^jj log --no-graph -r 'fork_point(@ | trunk())' -T 'commit_id.short()')
+  let base = (gh pr view (^jj log -r @- -T 'bookmarks' --no-graph) --json baseRefOid | from json | get baseRefOid)
   # ^nvim -c $"DiffviewOpen ($base)..HEAD"
-  ^nvim -c $"CodeDiff ($base)..."
+  ^nvim -c $"CodeDiff ($base)"
 
   if $bookmark != "HEAD" {
     # After reviewing, clean up by forgetting the bookmark and returning to main
