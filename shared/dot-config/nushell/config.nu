@@ -28,34 +28,6 @@ $env.config = {
       completer: $carapace_completer
     }
   }
-  hooks: {
-    pre_prompt: [
-      { ||
-        if (which direnv | is-empty) {
-          return
-        }
-
-        direnv export json | from json | default {} | load-env
-        if 'ENV_CONVERSIONS' in $env and 'PATH' in $env.ENV_CONVERSIONS {
-          $env.PATH = do $env.ENV_CONVERSIONS.PATH.from_string $env.PATH
-        }
-      }
-      {
-        condition: {||
-          (($env.PWD | path join "project-shell-modules" "mod.nu" | path exists)
-            and "project-shell-modules" not-in (overlay list | get name))
-        }
-        code: "overlay use project-shell-modules/mod.nu"
-      }
-      {
-        condition: {||
-          ("project-shell-modules" in (overlay list | get name)
-            and (not ($env.PWD | path join "project-shell-modules" "mod.nu" | path exists)))
-        }
-        code: "overlay hide project-shell-modules --keep-env [ PWD ]"
-      }
-    ]
-  }
 }
 
 $env.XDG_PICTURES_DIR = $'($env.HOME)/Pictures'
@@ -65,6 +37,7 @@ source kanagawa.nu
 source jj.nu
 source work.nu
 source aws.nu
+source direnv.nu
 
 use bash-env.nu
 

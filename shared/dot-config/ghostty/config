@@ -53,7 +53,7 @@ font-feature = ss02
 font-feature = ss04
 font-feature = -calt
 
-scrollback-limit=100000000
+scrollback-limit=10000000
 
 keybind= ctrl+shift+j=unbind
 window-decoration=false
