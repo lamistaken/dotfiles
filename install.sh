@@ -4,6 +4,8 @@ set -euo pipefail
 STOW_VERSION="2.4.1"
 STOW_URL="https://ftp.gnu.org/gnu/stow/stow-${STOW_VERSION}.tar.gz"
 
+NU_VERSION="0.113.1"
+
 install_stow() {
 	# Skip if the desired version is already installed
 	if command -v stow >/dev/null 2>&1 && stow --version | grep -q "$STOW_VERSION"; then
@@ -37,6 +39,65 @@ install_stow() {
 	echo "stow $(stow --version | head -n1) installed"
 }
 
-install_stow
+install_nushell() {
+	# Skip if the desired version is already installed
+	if command -v nu >/dev/null 2>&1 && nu --version | grep -q "$NU_VERSION"; then
+		echo "nushell $NU_VERSION already installed"
+		return
+	fi
 
-stow -R --dotfiles shared -t ~
+	# Map uname arch to nushell release target triple
+	local arch target
+	arch="$(uname -m)"
+	case "$arch" in
+		x86_64) target="x86_64-unknown-linux-gnu" ;;
+		aarch64 | arm64) target="aarch64-unknown-linux-gnu" ;;
+		*)
+			echo "Unsupported architecture for nushell: $arch" >&2
+			return 1
+			;;
+	esac
+
+	local url="https://github.com/nushell/nushell/releases/download/${NU_VERSION}/nu-${NU_VERSION}-${target}.tar.gz"
+
+	local tmpdir
+	tmpdir="$(mktemp -d)"
+	trap 'rm -rf "$tmpdir"' RETURN
+
+	echo "Downloading nushell $NU_VERSION..."
+	curl -fsSL "$url" -o "$tmpdir/nu.tar.gz"
+
+	echo "Extracting..."
+	tar -xzf "$tmpdir/nu.tar.gz" -C "$tmpdir"
+
+	echo "Installing nushell binaries to /usr/local/bin..."
+	# The tarball extracts into a directory containing nu and its plugins
+	find "$tmpdir" -maxdepth 2 -type f -name 'nu*' -exec sudo install -m 755 {} /usr/local/bin/ \;
+
+	echo "nushell $(nu --version) installed"
+}
+
+set_default_shell() {
+	local nu_path
+	nu_path="$(command -v nu)"
+
+	# Register nu as a valid login shell
+	if ! grep -qx "$nu_path" /etc/shells; then
+		echo "Registering $nu_path in /etc/shells..."
+		echo "$nu_path" | sudo tee -a /etc/shells >/dev/null
+	fi
+
+	if [ "$(getent passwd "$USER" | cut -d: -f7)" = "$nu_path" ]; then
+		echo "Default shell already set to nushell"
+		return
+	fi
+
+	echo "Setting nushell as the default shell for $USER..."
+	sudo chsh -s "$nu_path" "$USER"
+}
+
+install_stow
+install_nushell
+set_default_shell
+
+stow -R --dotfiles shared -t ~ --ignore=.zshrc
