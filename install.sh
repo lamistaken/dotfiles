@@ -8,6 +8,11 @@ NU_VERSION="0.113.1"
 
 JJ_VERSION="0.40.0"
 
+ZOXIDE_VERSION="0.10.0"
+ATUIN_VERSION="18.16.1"
+
+NVIM_VERSION="0.12.1"
+
 install_stow() {
 	# Skip if the desired version is already installed
 	if command -v stow >/dev/null 2>&1 && stow --version | grep -q "$STOW_VERSION"; then
@@ -116,6 +121,121 @@ install_jujutsu() {
 	echo "jujutsu $(jj --version) installed"
 }
 
+install_zoxide() {
+	# Skip if the desired version is already installed
+	if command -v zoxide >/dev/null 2>&1 && zoxide --version | grep -q "$ZOXIDE_VERSION"; then
+		echo "zoxide $ZOXIDE_VERSION already installed"
+		return
+	fi
+
+	# Map uname arch to zoxide release target triple
+	local arch target
+	arch="$(uname -m)"
+	case "$arch" in
+		x86_64) target="x86_64-unknown-linux-musl" ;;
+		aarch64 | arm64) target="aarch64-unknown-linux-musl" ;;
+		*)
+			echo "Unsupported architecture for zoxide: $arch" >&2
+			return 1
+			;;
+	esac
+
+	local url="https://github.com/ajeetdsouza/zoxide/releases/download/v${ZOXIDE_VERSION}/zoxide-${ZOXIDE_VERSION}-${target}.tar.gz"
+
+	local tmpdir
+	tmpdir="$(mktemp -d)"
+	trap 'rm -rf "$tmpdir"' RETURN
+
+	echo "Downloading zoxide $ZOXIDE_VERSION..."
+	curl -fsSL "$url" -o "$tmpdir/zoxide.tar.gz"
+
+	echo "Extracting..."
+	tar -xzf "$tmpdir/zoxide.tar.gz" -C "$tmpdir"
+
+	echo "Installing zoxide to /usr/local/bin..."
+	sudo install -m 755 "$tmpdir/zoxide" /usr/local/bin/zoxide
+
+	echo "zoxide $(zoxide --version) installed"
+}
+
+install_atuin() {
+	# Skip if the desired version is already installed
+	if command -v atuin >/dev/null 2>&1 && atuin --version | grep -q "$ATUIN_VERSION"; then
+		echo "atuin $ATUIN_VERSION already installed"
+		return
+	fi
+
+	# Map uname arch to atuin release target triple
+	local arch target
+	arch="$(uname -m)"
+	case "$arch" in
+		x86_64) target="x86_64-unknown-linux-gnu" ;;
+		aarch64 | arm64) target="aarch64-unknown-linux-gnu" ;;
+		*)
+			echo "Unsupported architecture for atuin: $arch" >&2
+			return 1
+			;;
+	esac
+
+	local url="https://github.com/atuinsh/atuin/releases/download/v${ATUIN_VERSION}/atuin-${target}.tar.gz"
+
+	local tmpdir
+	tmpdir="$(mktemp -d)"
+	trap 'rm -rf "$tmpdir"' RETURN
+
+	echo "Downloading atuin $ATUIN_VERSION..."
+	curl -fsSL "$url" -o "$tmpdir/atuin.tar.gz"
+
+	echo "Extracting..."
+	tar -xzf "$tmpdir/atuin.tar.gz" -C "$tmpdir"
+
+	echo "Installing atuin to /usr/local/bin..."
+	# The tarball extracts into a subdirectory containing the atuin binary
+	find "$tmpdir" -type f -name atuin -exec sudo install -m 755 {} /usr/local/bin/atuin \;
+
+	echo "atuin $(atuin --version) installed"
+}
+
+install_neovim() {
+	# Skip if the desired version is already installed
+	if command -v nvim >/dev/null 2>&1 && nvim --version | grep -q "v$NVIM_VERSION"; then
+		echo "neovim $NVIM_VERSION already installed"
+		return
+	fi
+
+	# Map uname arch to neovim release asset
+	local arch asset
+	arch="$(uname -m)"
+	case "$arch" in
+		x86_64) asset="nvim-linux-x86_64" ;;
+		aarch64 | arm64) asset="nvim-linux-arm64" ;;
+		*)
+			echo "Unsupported architecture for neovim: $arch" >&2
+			return 1
+			;;
+	esac
+
+	local url="https://github.com/neovim/neovim/releases/download/v${NVIM_VERSION}/${asset}.tar.gz"
+
+	local tmpdir
+	tmpdir="$(mktemp -d)"
+	trap 'rm -rf "$tmpdir"' RETURN
+
+	echo "Downloading neovim $NVIM_VERSION..."
+	curl -fsSL "$url" -o "$tmpdir/nvim.tar.gz"
+
+	echo "Extracting..."
+	tar -xzf "$tmpdir/nvim.tar.gz" -C "$tmpdir"
+
+	echo "Installing neovim to /opt/nvim..."
+	# Replace any previous install and symlink the binary onto PATH
+	sudo rm -rf /opt/nvim
+	sudo mv "$tmpdir/$asset" /opt/nvim
+	sudo ln -sf /opt/nvim/bin/nvim /usr/local/bin/nvim
+
+	echo "neovim $(nvim --version | head -n1) installed"
+}
+
 set_default_shell() {
 	local nu_path
 	nu_path="$(command -v nu)"
@@ -138,6 +258,9 @@ set_default_shell() {
 install_stow
 install_nushell
 install_jujutsu
+install_zoxide
+install_atuin
+install_neovim
 set_default_shell
 
 stow -R --dotfiles shared -t ~ --ignore=.zshrc
