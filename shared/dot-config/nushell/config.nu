@@ -40,7 +40,9 @@ source (if ($work_path | path exists) { $work_path } else { "/dev/null" })
 
 const aws_path = ($nu.default-config-dir | path join "aws.nu")
 source (if ($aws_path | path exists) { $aws_path } else { "/dev/null" })
-source direnv.nu
+
+const direnv_path = ($nu.default-config-dir | path join "direnv.nu")
+source (if ($direnv_path | path exists) { $direnv_path } else { "/dev/null" })
 
 use bash-env.nu
 
