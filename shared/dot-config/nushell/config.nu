@@ -34,6 +34,9 @@ $env.XDG_PICTURES_DIR = $'($env.HOME)/Pictures'
 
 $env.PATH = ($env.PATH | prepend ($env.HOME | path join ".local/bin"))
 
+$env.EDITOR = "nvim"
+$env.OPENCODE_CONFIG = ($env.HOME | path join ".config/opencode/personal.json")
+
 source ~/.local/share/atuin/init.nu
 source kanagawa.nu
 source jj.nu
