@@ -19,6 +19,9 @@ CARAPACE_VERSION="1.7.3"
 
 TV_VERSION="0.15.9"
 
+FD_VERSION="10.4.2"
+RG_VERSION="15.1.0"
+
 install_stow() {
 	# Skip if the desired version is already installed
 	if command -v stow >/dev/null 2>&1 && stow --version | grep -q "$STOW_VERSION"; then
@@ -357,6 +360,86 @@ install_television() {
 	echo "television $(tv --version) installed"
 }
 
+install_fd() {
+	# Skip if the desired version is already installed
+	if command -v fd >/dev/null 2>&1 && fd --version | grep -q "$FD_VERSION"; then
+		echo "fd $FD_VERSION already installed"
+		return
+	fi
+
+	# Map uname arch to fd release target triple
+	local arch target
+	arch="$(uname -m)"
+	case "$arch" in
+		x86_64) target="x86_64-unknown-linux-musl" ;;
+		aarch64 | arm64) target="aarch64-unknown-linux-musl" ;;
+		*)
+			echo "Unsupported architecture for fd: $arch" >&2
+			return 1
+			;;
+	esac
+
+	local asset="fd-v${FD_VERSION}-${target}"
+	local url="https://github.com/sharkdp/fd/releases/download/v${FD_VERSION}/${asset}.tar.gz"
+
+	local tmpdir
+	tmpdir="$(mktemp -d)"
+	trap 'rm -rf "$tmpdir"' RETURN
+
+	echo "Downloading fd $FD_VERSION..."
+	curl -fsSL "$url" -o "$tmpdir/fd.tar.gz"
+
+	echo "Extracting..."
+	tar -xzf "$tmpdir/fd.tar.gz" -C "$tmpdir"
+
+	echo "Installing fd to /usr/local/bin..."
+	# The tarball extracts into a subdirectory containing the fd binary
+	find "$tmpdir" -type f -name fd -exec sudo install -m 755 {} /usr/local/bin/fd \;
+
+	echo "fd $(fd --version) installed"
+}
+
+install_ripgrep() {
+	# Skip if the desired version is already installed
+	if command -v rg >/dev/null 2>&1 && rg --version | grep -q "$RG_VERSION"; then
+		echo "ripgrep $RG_VERSION already installed"
+		return
+	fi
+
+	# Map uname arch to ripgrep release target triple
+	# (ripgrep ships musl for x86_64 but only gnu for aarch64)
+	local arch target
+	arch="$(uname -m)"
+	case "$arch" in
+		x86_64) target="x86_64-unknown-linux-musl" ;;
+		aarch64 | arm64) target="aarch64-unknown-linux-gnu" ;;
+		*)
+			echo "Unsupported architecture for ripgrep: $arch" >&2
+			return 1
+			;;
+	esac
+
+	# Note: ripgrep release tags do not use a "v" prefix
+	local asset="ripgrep-${RG_VERSION}-${target}"
+	local url="https://github.com/BurntSushi/ripgrep/releases/download/${RG_VERSION}/${asset}.tar.gz"
+
+	local tmpdir
+	tmpdir="$(mktemp -d)"
+	trap 'rm -rf "$tmpdir"' RETURN
+
+	echo "Downloading ripgrep $RG_VERSION..."
+	curl -fsSL "$url" -o "$tmpdir/rg.tar.gz"
+
+	echo "Extracting..."
+	tar -xzf "$tmpdir/rg.tar.gz" -C "$tmpdir"
+
+	echo "Installing rg to /usr/local/bin..."
+	# The tarball extracts into a subdirectory containing the rg binary
+	find "$tmpdir" -type f -name rg -exec sudo install -m 755 {} /usr/local/bin/rg \;
+
+	echo "ripgrep $(rg --version | head -n1) installed"
+}
+
 install_tpm() {
 	local tpm_dir="$HOME/.tmux/plugins/tpm"
 
@@ -404,6 +487,8 @@ install_neovim
 install_sesh
 install_carapace
 install_television
+install_fd
+install_ripgrep
 install_tpm
 set_default_shell
 
