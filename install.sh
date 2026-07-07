@@ -315,6 +315,25 @@ install_carapace() {
 	echo "carapace $(carapace --version) installed"
 }
 
+install_tpm() {
+	local tpm_dir="$HOME/.tmux/plugins/tpm"
+
+	# tpm is distributed as a git repo, not a release binary
+	if ! command -v git >/dev/null 2>&1; then
+		echo "Installing git..."
+		sudo apt-get install -y git
+	fi
+
+	if [ -d "$tpm_dir/.git" ]; then
+		echo "Updating tpm..."
+		git -C "$tpm_dir" pull --ff-only
+		return
+	fi
+
+	echo "Cloning tpm to $tpm_dir..."
+	git clone https://github.com/tmux-plugins/tpm "$tpm_dir"
+}
+
 set_default_shell() {
 	local nu_path
 	nu_path="$(command -v nu)"
@@ -342,6 +361,7 @@ install_atuin
 install_neovim
 install_sesh
 install_carapace
+install_tpm
 set_default_shell
 
 stow -R --dotfiles shared -t ~ --ignore=.zshrc
