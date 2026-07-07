@@ -17,6 +17,8 @@ SESH_VERSION="2.26.2"
 
 CARAPACE_VERSION="1.7.3"
 
+TV_VERSION="0.15.9"
+
 install_stow() {
 	# Skip if the desired version is already installed
 	if command -v stow >/dev/null 2>&1 && stow --version | grep -q "$STOW_VERSION"; then
@@ -315,6 +317,46 @@ install_carapace() {
 	echo "carapace $(carapace --version) installed"
 }
 
+install_television() {
+	# Skip if the desired version is already installed
+	if command -v tv >/dev/null 2>&1 && tv --version | grep -q "$TV_VERSION"; then
+		echo "television $TV_VERSION already installed"
+		return
+	fi
+
+	# Map uname arch to television release target triple
+	local arch target
+	arch="$(uname -m)"
+	case "$arch" in
+		x86_64) target="x86_64-unknown-linux-gnu" ;;
+		aarch64 | arm64) target="aarch64-unknown-linux-gnu" ;;
+		*)
+			echo "Unsupported architecture for television: $arch" >&2
+			return 1
+			;;
+	esac
+
+	# Note: television release tags do not use a "v" prefix
+	local asset="tv-${TV_VERSION}-${target}"
+	local url="https://github.com/alexpasmantier/television/releases/download/${TV_VERSION}/${asset}.tar.gz"
+
+	local tmpdir
+	tmpdir="$(mktemp -d)"
+	trap 'rm -rf "$tmpdir"' RETURN
+
+	echo "Downloading television $TV_VERSION..."
+	curl -fsSL "$url" -o "$tmpdir/tv.tar.gz"
+
+	echo "Extracting..."
+	tar -xzf "$tmpdir/tv.tar.gz" -C "$tmpdir"
+
+	echo "Installing tv to /usr/local/bin..."
+	# The tarball extracts into a subdirectory containing the tv binary
+	find "$tmpdir" -type f -name tv -exec sudo install -m 755 {} /usr/local/bin/tv \;
+
+	echo "television $(tv --version) installed"
+}
+
 install_tpm() {
 	local tpm_dir="$HOME/.tmux/plugins/tpm"
 
@@ -361,6 +403,7 @@ install_atuin
 install_neovim
 install_sesh
 install_carapace
+install_television
 install_tpm
 set_default_shell
 
