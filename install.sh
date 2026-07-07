@@ -13,6 +13,10 @@ ATUIN_VERSION="18.16.1"
 
 NVIM_VERSION="0.12.1"
 
+SESH_VERSION="2.26.2"
+
+CARAPACE_VERSION="1.7.3"
+
 install_stow() {
 	# Skip if the desired version is already installed
 	if command -v stow >/dev/null 2>&1 && stow --version | grep -q "$STOW_VERSION"; then
@@ -236,6 +240,81 @@ install_neovim() {
 	echo "neovim $(nvim --version | head -n1) installed"
 }
 
+install_sesh() {
+	# Skip if the desired version is already installed
+	if command -v sesh >/dev/null 2>&1 && sesh --version | grep -q "$SESH_VERSION"; then
+		echo "sesh $SESH_VERSION already installed"
+		return
+	fi
+
+	# Map uname arch to sesh release asset
+	local arch asset
+	arch="$(uname -m)"
+	case "$arch" in
+		x86_64) asset="sesh_Linux_x86_64" ;;
+		aarch64 | arm64) asset="sesh_Linux_arm64" ;;
+		*)
+			echo "Unsupported architecture for sesh: $arch" >&2
+			return 1
+			;;
+	esac
+
+	local url="https://github.com/joshmedeski/sesh/releases/download/v${SESH_VERSION}/${asset}.tar.gz"
+
+	local tmpdir
+	tmpdir="$(mktemp -d)"
+	trap 'rm -rf "$tmpdir"' RETURN
+
+	echo "Downloading sesh $SESH_VERSION..."
+	curl -fsSL "$url" -o "$tmpdir/sesh.tar.gz"
+
+	echo "Extracting..."
+	tar -xzf "$tmpdir/sesh.tar.gz" -C "$tmpdir"
+
+	echo "Installing sesh to /usr/local/bin..."
+	sudo install -m 755 "$tmpdir/sesh" /usr/local/bin/sesh
+
+	echo "sesh $(sesh --version) installed"
+}
+
+install_carapace() {
+	# Skip if the desired version is already installed
+	if command -v carapace >/dev/null 2>&1 && carapace --version | grep -q "$CARAPACE_VERSION"; then
+		echo "carapace $CARAPACE_VERSION already installed"
+		return
+	fi
+
+	# Map uname arch to carapace release asset
+	local arch arch_name
+	arch="$(uname -m)"
+	case "$arch" in
+		x86_64) arch_name="amd64" ;;
+		aarch64 | arm64) arch_name="arm64" ;;
+		*)
+			echo "Unsupported architecture for carapace: $arch" >&2
+			return 1
+			;;
+	esac
+
+	local asset="carapace-bin_${CARAPACE_VERSION}_linux_${arch_name}"
+	local url="https://github.com/carapace-sh/carapace-bin/releases/download/v${CARAPACE_VERSION}/${asset}.tar.gz"
+
+	local tmpdir
+	tmpdir="$(mktemp -d)"
+	trap 'rm -rf "$tmpdir"' RETURN
+
+	echo "Downloading carapace $CARAPACE_VERSION..."
+	curl -fsSL "$url" -o "$tmpdir/carapace.tar.gz"
+
+	echo "Extracting..."
+	tar -xzf "$tmpdir/carapace.tar.gz" -C "$tmpdir"
+
+	echo "Installing carapace to /usr/local/bin..."
+	sudo install -m 755 "$tmpdir/carapace" /usr/local/bin/carapace
+
+	echo "carapace $(carapace --version) installed"
+}
+
 set_default_shell() {
 	local nu_path
 	nu_path="$(command -v nu)"
@@ -261,6 +340,8 @@ install_jujutsu
 install_zoxide
 install_atuin
 install_neovim
+install_sesh
+install_carapace
 set_default_shell
 
 stow -R --dotfiles shared -t ~ --ignore=.zshrc
