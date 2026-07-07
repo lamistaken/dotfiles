@@ -22,6 +22,8 @@ TV_VERSION="0.15.9"
 FD_VERSION="10.4.2"
 RG_VERSION="15.1.0"
 
+GO_VERSION="1.26.5"
+
 install_stow() {
 	# Skip if the desired version is already installed
 	if command -v stow >/dev/null 2>&1 && stow --version | grep -q "$STOW_VERSION"; then
@@ -440,6 +442,45 @@ install_ripgrep() {
 	echo "ripgrep $(rg --version | head -n1) installed"
 }
 
+install_golang() {
+	# Skip if the desired version is already installed
+	if command -v go >/dev/null 2>&1 && go version | grep -q "go$GO_VERSION"; then
+		echo "go $GO_VERSION already installed"
+		return
+	fi
+
+	# Map uname arch to go release arch
+	local arch arch_name
+	arch="$(uname -m)"
+	case "$arch" in
+		x86_64) arch_name="amd64" ;;
+		aarch64 | arm64) arch_name="arm64" ;;
+		*)
+			echo "Unsupported architecture for go: $arch" >&2
+			return 1
+			;;
+	esac
+
+	local url="https://go.dev/dl/go${GO_VERSION}.linux-${arch_name}.tar.gz"
+
+	local tmpdir
+	tmpdir="$(mktemp -d)"
+	trap 'rm -rf "$tmpdir"' RETURN
+
+	echo "Downloading go $GO_VERSION..."
+	curl -fsSL "$url" -o "$tmpdir/go.tar.gz"
+
+	echo "Installing go to /usr/local/go..."
+	# Official install method: replace any existing tree under /usr/local/go
+	sudo rm -rf /usr/local/go
+	sudo tar -C /usr/local -xzf "$tmpdir/go.tar.gz"
+	# Symlink onto PATH so no shell profile changes are required
+	sudo ln -sf /usr/local/go/bin/go /usr/local/bin/go
+	sudo ln -sf /usr/local/go/bin/gofmt /usr/local/bin/gofmt
+
+	echo "$(go version) installed"
+}
+
 install_tpm() {
 	local tpm_dir="$HOME/.tmux/plugins/tpm"
 
@@ -489,6 +530,7 @@ install_carapace
 install_television
 install_fd
 install_ripgrep
+install_golang
 install_tpm
 set_default_shell
 
