@@ -32,6 +32,8 @@ $env.config = {
 
 $env.XDG_PICTURES_DIR = $'($env.HOME)/Pictures'
 
+$env.PATH = ($env.PATH | prepend ($env.HOME | path join ".local/bin"))
+
 source ~/.local/share/atuin/init.nu
 source kanagawa.nu
 source jj.nu
