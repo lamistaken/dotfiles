@@ -35,8 +35,11 @@ $env.XDG_PICTURES_DIR = $'($env.HOME)/Pictures'
 source ~/.local/share/atuin/init.nu
 source kanagawa.nu
 source jj.nu
-source work.nu
-source aws.nu
+const work_path = ($nu.default-config-dir | path join "work.nu")
+source (if ($work_path | path exists) { $work_path } else { "/dev/null" })
+
+const aws_path = ($nu.default-config-dir | path join "aws.nu")
+source (if ($aws_path | path exists) { $aws_path } else { "/dev/null" })
 source direnv.nu
 
 use bash-env.nu
