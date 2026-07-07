@@ -6,6 +6,8 @@ STOW_URL="https://ftp.gnu.org/gnu/stow/stow-${STOW_VERSION}.tar.gz"
 
 NU_VERSION="0.113.1"
 
+JJ_VERSION="0.40.0"
+
 install_stow() {
 	# Skip if the desired version is already installed
 	if command -v stow >/dev/null 2>&1 && stow --version | grep -q "$STOW_VERSION"; then
@@ -77,6 +79,43 @@ install_nushell() {
 	echo "nushell $(nu --version) installed"
 }
 
+install_jujutsu() {
+	# Skip if the desired version is already installed
+	if command -v jj >/dev/null 2>&1 && jj --version | grep -q "$JJ_VERSION"; then
+		echo "jujutsu $JJ_VERSION already installed"
+		return
+	fi
+
+	# Map uname arch to jj release target triple
+	local arch target
+	arch="$(uname -m)"
+	case "$arch" in
+		x86_64) target="x86_64-unknown-linux-musl" ;;
+		aarch64 | arm64) target="aarch64-unknown-linux-musl" ;;
+		*)
+			echo "Unsupported architecture for jujutsu: $arch" >&2
+			return 1
+			;;
+	esac
+
+	local url="https://github.com/jj-vcs/jj/releases/download/v${JJ_VERSION}/jj-v${JJ_VERSION}-${target}.tar.gz"
+
+	local tmpdir
+	tmpdir="$(mktemp -d)"
+	trap 'rm -rf "$tmpdir"' RETURN
+
+	echo "Downloading jujutsu $JJ_VERSION..."
+	curl -fsSL "$url" -o "$tmpdir/jj.tar.gz"
+
+	echo "Extracting..."
+	tar -xzf "$tmpdir/jj.tar.gz" -C "$tmpdir"
+
+	echo "Installing jj to /usr/local/bin..."
+	sudo install -m 755 "$tmpdir/jj" /usr/local/bin/jj
+
+	echo "jujutsu $(jj --version) installed"
+}
+
 set_default_shell() {
 	local nu_path
 	nu_path="$(command -v nu)"
@@ -98,6 +137,7 @@ set_default_shell() {
 
 install_stow
 install_nushell
+install_jujutsu
 set_default_shell
 
 stow -R --dotfiles shared -t ~ --ignore=.zshrc
