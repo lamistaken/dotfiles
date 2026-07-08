@@ -36,6 +36,7 @@ $env.PATH = ($env.PATH | prepend ($env.HOME | path join ".local/bin"))
 
 $env.EDITOR = "nvim"
 $env.OPENCODE_CONFIG = ($env.HOME | path join ".config/opencode/personal.json")
+$env.OPENCODE_TUI_CONFIG = ($env.HOME | path join ".config/opencode/personal-tui.json")
 
 source ~/.local/share/atuin/init.nu
 source kanagawa.nu

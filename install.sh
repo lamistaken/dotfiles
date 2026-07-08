@@ -500,6 +500,22 @@ install_tpm() {
 	git clone https://github.com/tmux-plugins/tpm "$tpm_dir"
 }
 
+install_opencode_plugin_deps() {
+	# The opencode clipboard plugin imports @opencode-ai/plugin. It is stow-symlinked
+	# into ~/.config/opencode/plugins, so opencode's bundler resolves the import from
+	# this repo's real path. Provide node_modules at the repo root so it resolves.
+	local repo_dir
+	repo_dir="$(cd "$(dirname "$0")" && pwd)"
+
+	if ! command -v npm >/dev/null 2>&1; then
+		echo "npm not found; skipping opencode plugin deps"
+		return
+	fi
+
+	echo "Installing opencode plugin dependencies..."
+	(cd "$repo_dir" && npm install)
+}
+
 set_default_shell() {
 	local nu_path
 	nu_path="$(command -v nu)"
@@ -533,5 +549,6 @@ install_ripgrep
 install_golang
 install_tpm
 set_default_shell
+install_opencode_plugin_deps
 
 stow -R --dotfiles shared -t ~ --ignore=.zshrc
