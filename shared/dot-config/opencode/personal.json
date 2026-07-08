@@ -3,6 +3,18 @@
   "instructions": [
     "AGENTS.local.md"
   ],
+  "provider": {
+    "llm-gateway": {
+      "models": {
+        "glm-5.2": {
+          "limit": {
+            "context": 1000000,
+            "output": 1000000
+          }
+        }
+      }
+    }
+  },
   "lsp": true,
   "permission": {
     "external_directory": {
