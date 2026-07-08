@@ -22,7 +22,15 @@ export const ClipboardPlugin: Plugin = async () => {
             attempts.push(["wl-copy", () => execSync("wl-copy", { input: text })])
           }
           if (process.env.TMUX) {
-            attempts.push(["tmux (OSC52)", () => execSync("tmux load-buffer -w -", { input: text })])
+            attempts.push(["tmux (OSC52)", () => {
+              const clients = execSync("tmux list-clients -F '#{client_name}'")
+                .toString().trim().split("\n").filter(Boolean)
+              for (const client of clients) {
+                try {
+                  execSync(`tmux load-buffer -w -t ${client} -`, { input: text })
+                } catch {}
+              }
+            }])
           }
 
           for (const [name, fn] of attempts) {
