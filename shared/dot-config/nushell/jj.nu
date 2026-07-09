@@ -52,9 +52,9 @@ def "jj review pr" [bookmark: string] {
   # Open a diff view between the fork point and HEAD
   # let base = (^jj log --no-graph -r 'fork_point(@ | trunk())' -T 'commit_id.short()')
   let base = (gh api repos/{owner}/{repo}/compare/main...($bookmark) --jq '.merge_base_commit.sha')
-  let current = (gh pr view (^jj log -r @- -T 'bookmarks' --no-graph) --json commits | from json |  get commits.oid | last)
+  # let current = (gh pr view (^jj log -r @- -T 'bookmarks' --no-graph) --json commits | from json |  get commits.oid | last)
   # ^nvim -c $"DiffviewOpen ($base)..HEAD"
-  ^nvim -c $"CodeDiff ($base) ($current)"
+  ^nvim -c $"CodeDiff ($base) HEAD"
 
   if $bookmark != "HEAD" {
     # After reviewing, clean up by forgetting the bookmark and returning to main
