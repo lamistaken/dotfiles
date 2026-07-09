@@ -1,30 +1,30 @@
 #!/bin/env bash
 set -euo pipefail
 
+# Thin bootstrap for a Coder devspace that rebuilds daily.
+#
+# Only $HOME persists across rebuilds, so everything here is expected to run
+# fresh each day. Individual CLI tools are declared in mise
+# (shared/dot-config/mise/config.toml -> ~/.config/mise/config.toml) and
+# installed with `mise install`. This script only handles the pieces that are
+# not "a pinned release binary": building stow, installing mise itself,
+# stowing the dotfiles, cloning tpm, setting the default shell, and the
+# opencode plugin deps.
+
 STOW_VERSION="2.4.1"
 STOW_URL="https://ftp.gnu.org/gnu/stow/stow-${STOW_VERSION}.tar.gz"
 
-NU_VERSION="0.113.1"
+MISE_VERSION="2026.7.5"
 
-JJ_VERSION="0.40.0"
+MISE_BIN="$HOME/.local/bin/mise"
+NU_SHIM="$HOME/.local/share/mise/shims/nu"
 
-ZOXIDE_VERSION="0.10.0"
-ATUIN_VERSION="18.16.1"
-
-NVIM_VERSION="0.12.1"
-
-SESH_VERSION="2.26.2"
-
-CARAPACE_VERSION="1.7.3"
-
-TV_VERSION="0.15.9"
-
-FD_VERSION="10.4.2"
-RG_VERSION="15.1.0"
-
-GO_VERSION="1.26.5"
+REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 install_stow() {
+	# stow is a Perl program with no release binary, so it is not available via
+	# mise's aqua/github backends and is built from source here.
+
 	# Skip if the desired version is already installed
 	if command -v stow >/dev/null 2>&1 && stow --version | grep -q "$STOW_VERSION"; then
 		echo "stow $STOW_VERSION already installed"
@@ -57,428 +57,36 @@ install_stow() {
 	echo "stow $(stow --version | head -n1) installed"
 }
 
-install_nushell() {
+install_mise() {
 	# Skip if the desired version is already installed
-	if command -v nu >/dev/null 2>&1 && nu --version | grep -q "$NU_VERSION"; then
-		echo "nushell $NU_VERSION already installed"
+	if [ -x "$MISE_BIN" ] && "$MISE_BIN" --version | grep -q "$MISE_VERSION"; then
+		echo "mise $MISE_VERSION already installed"
 		return
 	fi
 
-	# Map uname arch to nushell release target triple
-	local arch target
-	arch="$(uname -m)"
-	case "$arch" in
-		x86_64) target="x86_64-unknown-linux-gnu" ;;
-		aarch64 | arm64) target="aarch64-unknown-linux-gnu" ;;
-		*)
-			echo "Unsupported architecture for nushell: $arch" >&2
-			return 1
-			;;
-	esac
+	echo "Installing mise $MISE_VERSION..."
+	# The installer honors MISE_VERSION and installs to ~/.local/bin by default.
+	curl -fsSL https://mise.run | MISE_VERSION="v${MISE_VERSION}" sh
 
-	local url="https://github.com/nushell/nushell/releases/download/${NU_VERSION}/nu-${NU_VERSION}-${target}.tar.gz"
-
-	local tmpdir
-	tmpdir="$(mktemp -d)"
-	trap 'rm -rf "$tmpdir"' RETURN
-
-	echo "Downloading nushell $NU_VERSION..."
-	curl -fsSL "$url" -o "$tmpdir/nu.tar.gz"
-
-	echo "Extracting..."
-	tar -xzf "$tmpdir/nu.tar.gz" -C "$tmpdir"
-
-	echo "Installing nushell binaries to /usr/local/bin..."
-	# The tarball extracts into a directory containing nu and its plugins
-	find "$tmpdir" -maxdepth 2 -type f -name 'nu*' -exec sudo install -m 755 {} /usr/local/bin/ \;
-
-	echo "nushell $(nu --version) installed"
+	echo "mise $("$MISE_BIN" --version) installed"
 }
 
-install_jujutsu() {
-	# Skip if the desired version is already installed
-	if command -v jj >/dev/null 2>&1 && jj --version | grep -q "$JJ_VERSION"; then
-		echo "jujutsu $JJ_VERSION already installed"
-		return
-	fi
-
-	# Map uname arch to jj release target triple
-	local arch target
-	arch="$(uname -m)"
-	case "$arch" in
-		x86_64) target="x86_64-unknown-linux-musl" ;;
-		aarch64 | arm64) target="aarch64-unknown-linux-musl" ;;
-		*)
-			echo "Unsupported architecture for jujutsu: $arch" >&2
-			return 1
-			;;
-	esac
-
-	local url="https://github.com/jj-vcs/jj/releases/download/v${JJ_VERSION}/jj-v${JJ_VERSION}-${target}.tar.gz"
-
-	local tmpdir
-	tmpdir="$(mktemp -d)"
-	trap 'rm -rf "$tmpdir"' RETURN
-
-	echo "Downloading jujutsu $JJ_VERSION..."
-	curl -fsSL "$url" -o "$tmpdir/jj.tar.gz"
-
-	echo "Extracting..."
-	tar -xzf "$tmpdir/jj.tar.gz" -C "$tmpdir"
-
-	echo "Installing jj to /usr/local/bin..."
-	sudo install -m 755 "$tmpdir/jj" /usr/local/bin/jj
-
-	echo "jujutsu $(jj --version) installed"
+stow_dotfiles() {
+	# Run before mise_install so the global mise config is symlinked into
+	# ~/.config/mise/config.toml before `mise install` reads it.
+	echo "Stowing dotfiles..."
+	(cd "$REPO_DIR" && stow -R --dotfiles shared -t ~ --ignore=.zshrc)
 }
 
-install_zoxide() {
-	# Skip if the desired version is already installed
-	if command -v zoxide >/dev/null 2>&1 && zoxide --version | grep -q "$ZOXIDE_VERSION"; then
-		echo "zoxide $ZOXIDE_VERSION already installed"
-		return
-	fi
-
-	# Map uname arch to zoxide release target triple
-	local arch target
-	arch="$(uname -m)"
-	case "$arch" in
-		x86_64) target="x86_64-unknown-linux-musl" ;;
-		aarch64 | arm64) target="aarch64-unknown-linux-musl" ;;
-		*)
-			echo "Unsupported architecture for zoxide: $arch" >&2
-			return 1
-			;;
-	esac
-
-	local url="https://github.com/ajeetdsouza/zoxide/releases/download/v${ZOXIDE_VERSION}/zoxide-${ZOXIDE_VERSION}-${target}.tar.gz"
-
-	local tmpdir
-	tmpdir="$(mktemp -d)"
-	trap 'rm -rf "$tmpdir"' RETURN
-
-	echo "Downloading zoxide $ZOXIDE_VERSION..."
-	curl -fsSL "$url" -o "$tmpdir/zoxide.tar.gz"
-
-	echo "Extracting..."
-	tar -xzf "$tmpdir/zoxide.tar.gz" -C "$tmpdir"
-
-	echo "Installing zoxide to /usr/local/bin..."
-	sudo install -m 755 "$tmpdir/zoxide" /usr/local/bin/zoxide
-
-	echo "zoxide $(zoxide --version) installed"
-}
-
-install_atuin() {
-	# Skip if the desired version is already installed
-	if command -v atuin >/dev/null 2>&1 && atuin --version | grep -q "$ATUIN_VERSION"; then
-		echo "atuin $ATUIN_VERSION already installed"
-		return
-	fi
-
-	# Map uname arch to atuin release target triple
-	local arch target
-	arch="$(uname -m)"
-	case "$arch" in
-		x86_64) target="x86_64-unknown-linux-gnu" ;;
-		aarch64 | arm64) target="aarch64-unknown-linux-gnu" ;;
-		*)
-			echo "Unsupported architecture for atuin: $arch" >&2
-			return 1
-			;;
-	esac
-
-	local url="https://github.com/atuinsh/atuin/releases/download/v${ATUIN_VERSION}/atuin-${target}.tar.gz"
-
-	local tmpdir
-	tmpdir="$(mktemp -d)"
-	trap 'rm -rf "$tmpdir"' RETURN
-
-	echo "Downloading atuin $ATUIN_VERSION..."
-	curl -fsSL "$url" -o "$tmpdir/atuin.tar.gz"
-
-	echo "Extracting..."
-	tar -xzf "$tmpdir/atuin.tar.gz" -C "$tmpdir"
-
-	echo "Installing atuin to /usr/local/bin..."
-	# The tarball extracts into a subdirectory containing the atuin binary
-	find "$tmpdir" -type f -name atuin -exec sudo install -m 755 {} /usr/local/bin/atuin \;
-
-	echo "atuin $(atuin --version) installed"
-}
-
-install_neovim() {
-	# Skip if the desired version is already installed
-	if command -v nvim >/dev/null 2>&1 && nvim --version | grep -q "v$NVIM_VERSION"; then
-		echo "neovim $NVIM_VERSION already installed"
-		return
-	fi
-
-	# Map uname arch to neovim release asset
-	local arch asset
-	arch="$(uname -m)"
-	case "$arch" in
-		x86_64) asset="nvim-linux-x86_64" ;;
-		aarch64 | arm64) asset="nvim-linux-arm64" ;;
-		*)
-			echo "Unsupported architecture for neovim: $arch" >&2
-			return 1
-			;;
-	esac
-
-	local url="https://github.com/neovim/neovim/releases/download/v${NVIM_VERSION}/${asset}.tar.gz"
-
-	local tmpdir
-	tmpdir="$(mktemp -d)"
-	trap 'rm -rf "$tmpdir"' RETURN
-
-	echo "Downloading neovim $NVIM_VERSION..."
-	curl -fsSL "$url" -o "$tmpdir/nvim.tar.gz"
-
-	echo "Extracting..."
-	tar -xzf "$tmpdir/nvim.tar.gz" -C "$tmpdir"
-
-	echo "Installing neovim to /opt/nvim..."
-	# Replace any previous install and symlink the binary onto PATH
-	sudo rm -rf /opt/nvim
-	sudo mv "$tmpdir/$asset" /opt/nvim
-	sudo ln -sf /opt/nvim/bin/nvim /usr/local/bin/nvim
-
-	echo "neovim $(nvim --version | head -n1) installed"
-}
-
-install_sesh() {
-	# Skip if the desired version is already installed
-	if command -v sesh >/dev/null 2>&1 && sesh --version | grep -q "$SESH_VERSION"; then
-		echo "sesh $SESH_VERSION already installed"
-		return
-	fi
-
-	# Map uname arch to sesh release asset
-	local arch asset
-	arch="$(uname -m)"
-	case "$arch" in
-		x86_64) asset="sesh_Linux_x86_64" ;;
-		aarch64 | arm64) asset="sesh_Linux_arm64" ;;
-		*)
-			echo "Unsupported architecture for sesh: $arch" >&2
-			return 1
-			;;
-	esac
-
-	local url="https://github.com/joshmedeski/sesh/releases/download/v${SESH_VERSION}/${asset}.tar.gz"
-
-	local tmpdir
-	tmpdir="$(mktemp -d)"
-	trap 'rm -rf "$tmpdir"' RETURN
-
-	echo "Downloading sesh $SESH_VERSION..."
-	curl -fsSL "$url" -o "$tmpdir/sesh.tar.gz"
-
-	echo "Extracting..."
-	tar -xzf "$tmpdir/sesh.tar.gz" -C "$tmpdir"
-
-	echo "Installing sesh to /usr/local/bin..."
-	sudo install -m 755 "$tmpdir/sesh" /usr/local/bin/sesh
-
-	echo "sesh $(sesh --version) installed"
-}
-
-install_carapace() {
-	# Skip if the desired version is already installed
-	if command -v carapace >/dev/null 2>&1 && carapace --version | grep -q "$CARAPACE_VERSION"; then
-		echo "carapace $CARAPACE_VERSION already installed"
-		return
-	fi
-
-	# Map uname arch to carapace release asset
-	local arch arch_name
-	arch="$(uname -m)"
-	case "$arch" in
-		x86_64) arch_name="amd64" ;;
-		aarch64 | arm64) arch_name="arm64" ;;
-		*)
-			echo "Unsupported architecture for carapace: $arch" >&2
-			return 1
-			;;
-	esac
-
-	local asset="carapace-bin_${CARAPACE_VERSION}_linux_${arch_name}"
-	local url="https://github.com/carapace-sh/carapace-bin/releases/download/v${CARAPACE_VERSION}/${asset}.tar.gz"
-
-	local tmpdir
-	tmpdir="$(mktemp -d)"
-	trap 'rm -rf "$tmpdir"' RETURN
-
-	echo "Downloading carapace $CARAPACE_VERSION..."
-	curl -fsSL "$url" -o "$tmpdir/carapace.tar.gz"
-
-	echo "Extracting..."
-	tar -xzf "$tmpdir/carapace.tar.gz" -C "$tmpdir"
-
-	echo "Installing carapace to /usr/local/bin..."
-	sudo install -m 755 "$tmpdir/carapace" /usr/local/bin/carapace
-
-	echo "carapace $(carapace --version) installed"
-}
-
-install_television() {
-	# Skip if the desired version is already installed
-	if command -v tv >/dev/null 2>&1 && tv --version | grep -q "$TV_VERSION"; then
-		echo "television $TV_VERSION already installed"
-		return
-	fi
-
-	# Map uname arch to television release target triple
-	local arch target
-	arch="$(uname -m)"
-	case "$arch" in
-		x86_64) target="x86_64-unknown-linux-gnu" ;;
-		aarch64 | arm64) target="aarch64-unknown-linux-gnu" ;;
-		*)
-			echo "Unsupported architecture for television: $arch" >&2
-			return 1
-			;;
-	esac
-
-	# Note: television release tags do not use a "v" prefix
-	local asset="tv-${TV_VERSION}-${target}"
-	local url="https://github.com/alexpasmantier/television/releases/download/${TV_VERSION}/${asset}.tar.gz"
-
-	local tmpdir
-	tmpdir="$(mktemp -d)"
-	trap 'rm -rf "$tmpdir"' RETURN
-
-	echo "Downloading television $TV_VERSION..."
-	curl -fsSL "$url" -o "$tmpdir/tv.tar.gz"
-
-	echo "Extracting..."
-	tar -xzf "$tmpdir/tv.tar.gz" -C "$tmpdir"
-
-	echo "Installing tv to /usr/local/bin..."
-	# The tarball extracts into a subdirectory containing the tv binary
-	find "$tmpdir" -type f -name tv -exec sudo install -m 755 {} /usr/local/bin/tv \;
-
-	echo "television $(tv --version) installed"
-}
-
-install_fd() {
-	# Skip if the desired version is already installed
-	if command -v fd >/dev/null 2>&1 && fd --version | grep -q "$FD_VERSION"; then
-		echo "fd $FD_VERSION already installed"
-		return
-	fi
-
-	# Map uname arch to fd release target triple
-	local arch target
-	arch="$(uname -m)"
-	case "$arch" in
-		x86_64) target="x86_64-unknown-linux-musl" ;;
-		aarch64 | arm64) target="aarch64-unknown-linux-musl" ;;
-		*)
-			echo "Unsupported architecture for fd: $arch" >&2
-			return 1
-			;;
-	esac
-
-	local asset="fd-v${FD_VERSION}-${target}"
-	local url="https://github.com/sharkdp/fd/releases/download/v${FD_VERSION}/${asset}.tar.gz"
-
-	local tmpdir
-	tmpdir="$(mktemp -d)"
-	trap 'rm -rf "$tmpdir"' RETURN
-
-	echo "Downloading fd $FD_VERSION..."
-	curl -fsSL "$url" -o "$tmpdir/fd.tar.gz"
-
-	echo "Extracting..."
-	tar -xzf "$tmpdir/fd.tar.gz" -C "$tmpdir"
-
-	echo "Installing fd to /usr/local/bin..."
-	# The tarball extracts into a subdirectory containing the fd binary
-	find "$tmpdir" -type f -name fd -exec sudo install -m 755 {} /usr/local/bin/fd \;
-
-	echo "fd $(fd --version) installed"
-}
-
-install_ripgrep() {
-	# Skip if the desired version is already installed
-	if command -v rg >/dev/null 2>&1 && rg --version | grep -q "$RG_VERSION"; then
-		echo "ripgrep $RG_VERSION already installed"
-		return
-	fi
-
-	# Map uname arch to ripgrep release target triple
-	# (ripgrep ships musl for x86_64 but only gnu for aarch64)
-	local arch target
-	arch="$(uname -m)"
-	case "$arch" in
-		x86_64) target="x86_64-unknown-linux-musl" ;;
-		aarch64 | arm64) target="aarch64-unknown-linux-gnu" ;;
-		*)
-			echo "Unsupported architecture for ripgrep: $arch" >&2
-			return 1
-			;;
-	esac
-
-	# Note: ripgrep release tags do not use a "v" prefix
-	local asset="ripgrep-${RG_VERSION}-${target}"
-	local url="https://github.com/BurntSushi/ripgrep/releases/download/${RG_VERSION}/${asset}.tar.gz"
-
-	local tmpdir
-	tmpdir="$(mktemp -d)"
-	trap 'rm -rf "$tmpdir"' RETURN
-
-	echo "Downloading ripgrep $RG_VERSION..."
-	curl -fsSL "$url" -o "$tmpdir/rg.tar.gz"
-
-	echo "Extracting..."
-	tar -xzf "$tmpdir/rg.tar.gz" -C "$tmpdir"
-
-	echo "Installing rg to /usr/local/bin..."
-	# The tarball extracts into a subdirectory containing the rg binary
-	find "$tmpdir" -type f -name rg -exec sudo install -m 755 {} /usr/local/bin/rg \;
-
-	echo "ripgrep $(rg --version | head -n1) installed"
-}
-
-install_golang() {
-	# Skip if the desired version is already installed
-	if command -v go >/dev/null 2>&1 && go version | grep -q "go$GO_VERSION"; then
-		echo "go $GO_VERSION already installed"
-		return
-	fi
-
-	# Map uname arch to go release arch
-	local arch arch_name
-	arch="$(uname -m)"
-	case "$arch" in
-		x86_64) arch_name="amd64" ;;
-		aarch64 | arm64) arch_name="arm64" ;;
-		*)
-			echo "Unsupported architecture for go: $arch" >&2
-			return 1
-			;;
-	esac
-
-	local url="https://go.dev/dl/go${GO_VERSION}.linux-${arch_name}.tar.gz"
-
-	local tmpdir
-	tmpdir="$(mktemp -d)"
-	trap 'rm -rf "$tmpdir"' RETURN
-
-	echo "Downloading go $GO_VERSION..."
-	curl -fsSL "$url" -o "$tmpdir/go.tar.gz"
-
-	echo "Installing go to /usr/local/go..."
-	# Official install method: replace any existing tree under /usr/local/go
-	sudo rm -rf /usr/local/go
-	sudo tar -C /usr/local -xzf "$tmpdir/go.tar.gz"
-	# Symlink onto PATH so no shell profile changes are required
-	sudo ln -sf /usr/local/go/bin/go /usr/local/bin/go
-	sudo ln -sf /usr/local/go/bin/gofmt /usr/local/bin/gofmt
-
-	echo "$(go version) installed"
+mise_install() {
+	# Installs every tool declared in ~/.config/mise/config.toml (checksum
+	# verified via the aqua registry) and regenerates the shims directory.
+	echo "Installing tools from mise config..."
+	"$MISE_BIN" install
+	"$MISE_BIN" reshim
+
+	echo "mise tools installed:"
+	"$MISE_BIN" ls --installed
 }
 
 install_tpm() {
@@ -500,55 +108,46 @@ install_tpm() {
 	git clone https://github.com/tmux-plugins/tpm "$tpm_dir"
 }
 
+set_default_shell() {
+	# Point at the mise shim rather than a versioned install path so that
+	# bumping the nushell pin doesn't require re-registering the shell.
+	if [ ! -e "$NU_SHIM" ]; then
+		echo "nushell shim not found at $NU_SHIM; did mise_install run?" >&2
+		return 1
+	fi
+
+	# Register nu as a valid login shell
+	if ! grep -qx "$NU_SHIM" /etc/shells; then
+		echo "Registering $NU_SHIM in /etc/shells..."
+		echo "$NU_SHIM" | sudo tee -a /etc/shells >/dev/null
+	fi
+
+	if [ "$(getent passwd "$USER" | cut -d: -f7)" = "$NU_SHIM" ]; then
+		echo "Default shell already set to nushell"
+		return
+	fi
+
+	echo "Setting nushell as the default shell for $USER..."
+	sudo chsh -s "$NU_SHIM" "$USER"
+}
+
 install_opencode_plugin_deps() {
 	# The opencode clipboard plugin imports @opencode-ai/plugin. It is stow-symlinked
 	# into ~/.config/opencode/plugins, so opencode's bundler resolves the import from
 	# this repo's real path. Provide node_modules at the repo root so it resolves.
-	local repo_dir
-	repo_dir="$(cd "$(dirname "$0")" && pwd)"
-
 	if ! command -v npm >/dev/null 2>&1; then
 		echo "npm not found; skipping opencode plugin deps"
 		return
 	fi
 
 	echo "Installing opencode plugin dependencies..."
-	(cd "$repo_dir" && npm install)
-}
-
-set_default_shell() {
-	local nu_path
-	nu_path="$(command -v nu)"
-
-	# Register nu as a valid login shell
-	if ! grep -qx "$nu_path" /etc/shells; then
-		echo "Registering $nu_path in /etc/shells..."
-		echo "$nu_path" | sudo tee -a /etc/shells >/dev/null
-	fi
-
-	if [ "$(getent passwd "$USER" | cut -d: -f7)" = "$nu_path" ]; then
-		echo "Default shell already set to nushell"
-		return
-	fi
-
-	echo "Setting nushell as the default shell for $USER..."
-	sudo chsh -s "$nu_path" "$USER"
+	(cd "$REPO_DIR" && npm install)
 }
 
 install_stow
-install_nushell
-install_jujutsu
-install_zoxide
-install_atuin
-install_neovim
-install_sesh
-install_carapace
-install_television
-install_fd
-install_ripgrep
-install_golang
+install_mise
+stow_dotfiles
+mise_install
 install_tpm
 set_default_shell
 install_opencode_plugin_deps
-
-stow -R --dotfiles shared -t ~ --ignore=.zshrc

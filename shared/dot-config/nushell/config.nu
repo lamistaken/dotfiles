@@ -33,6 +33,10 @@ $env.config = {
 $env.XDG_PICTURES_DIR = $'($env.HOME)/Pictures'
 
 $env.PATH = ($env.PATH | prepend ($env.HOME | path join ".local/bin"))
+# mise-managed tools are exposed via its shims directory. Prepending it here
+# puts every mise tool on PATH for this shell and all child processes
+# (nvim, opencode, bash -c tool calls, ...), which inherit it.
+$env.PATH = ($env.PATH | prepend ($env.HOME | path join ".local/share/mise/shims"))
 
 $env.EDITOR = "nvim"
 $env.OPENCODE_CONFIG = ($env.HOME | path join ".config/opencode/personal.json")

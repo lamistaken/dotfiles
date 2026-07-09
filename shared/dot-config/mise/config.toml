@@ -1,0 +1,27 @@
+# Global tool versions, managed declaratively by mise.
+#
+# Stowed to ~/.config/mise/config.toml and installed by install.sh via
+# `mise install`. Tools are exposed on PATH through mise's shims directory
+# (~/.local/share/mise/shims), which nushell prepends to PATH in config.nu.
+#
+# Backend notes:
+#   - Short names (jj, fd, ...) resolve to aqua entries in mise's registry.
+#   - neovim is pinned to aqua explicitly because its default resolution
+#     prefers the discouraged vfox backend.
+#   - nushell and sesh have no registry shorthand, so the aqua backend is
+#     spelled out. Both are verified single-binary, checksum-verified installs.
+
+[tools]
+go = "1.26.5"
+ripgrep = "15.1.0"
+fd = "10.4.2"
+zoxide = "0.10.0"
+atuin = "18.16.1"
+carapace = "1.7.3"
+television = "0.15.9"
+jj = "0.40.0"
+jjui = "0.10.8"
+lazydocker = "0.25.2"
+"aqua:neovim/neovim" = "0.12.1"
+"aqua:nushell/nushell" = "0.113.1"
+"aqua:joshmedeski/sesh" = "2.26.2"
