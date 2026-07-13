@@ -35,6 +35,18 @@ vim.opt.showmode = false
 -- end)
 --
 
+-- Over SSH, use OSC 52 so `+`/`*` register writes reach the local system
+-- clipboard through tmux/terminal (no clipboard tool needed on the remote).
+-- Locally (no SSH), Neovim keeps auto-detecting wl-copy.
+if vim.env.SSH_TTY or vim.env.SSH_CONNECTION then
+  local osc52 = require 'vim.ui.clipboard.osc52'
+  vim.g.clipboard = {
+    name = 'OSC 52',
+    copy = { ['+'] = osc52.copy '+', ['*'] = osc52.copy '*' },
+    paste = { ['+'] = osc52.paste '+', ['*'] = osc52.paste '*' },
+  }
+end
+
 -- Enable per-project configuration files
 vim.opt.exrc = true
 
