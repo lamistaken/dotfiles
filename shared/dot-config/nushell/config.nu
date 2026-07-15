@@ -38,17 +38,6 @@ $env.PATH = ($env.PATH | prepend ($env.HOME | path join ".local/bin"))
 # (nvim, opencode, bash -c tool calls, ...), which inherit it.
 $env.PATH = ($env.PATH | prepend ($env.HOME | path join ".local/share/mise/shims"))
 
-# Nix (Determinate) — expose nix + user profile on PATH for interactive
-# shells and direnv `use flake` (direnv inherits this env as a child process).
-let nix_bin = "/nix/var/nix/profiles/default/bin"
-if ($nix_bin | path exists) {
-    $env.PATH = ($env.PATH | prepend $nix_bin)
-    let nix_user_bin = ($env.HOME | path join ".nix-profile/bin")
-    if ($nix_user_bin | path exists) {
-        $env.PATH = ($env.PATH | prepend $nix_user_bin)
-    }
-}
-
 $env.EDITOR = "nvim"
 $env.OPENCODE_CONFIG = ($env.HOME | path join ".config/opencode/personal.json")
 $env.OPENCODE_TUI_CONFIG = ($env.HOME | path join ".config/opencode/personal-tui.json")

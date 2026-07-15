@@ -57,24 +57,6 @@ install_stow() {
 	echo "stow $(stow --version | head -n1) installed"
 }
 
-install_nix() {
-	# Nix installs to /nix, which does NOT persist across daily rebuilds, so
-	# this reinstalls each run (same philosophy as the rest of this script).
-	# The Determinate installer is a self-contained binary (no xz/build deps),
-	# sets up a systemd-managed daemon, and enables flakes by default via
-	# /etc/nix/nix.conf, so no user nix.conf is needed.
-	if command -v nix >/dev/null 2>&1; then
-		echo "nix $(nix --version) already installed"
-		return
-	fi
-
-	echo "Installing nix (Determinate)..."
-	curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix |
-		sh -s -- install --no-confirm
-
-	echo "nix installed"
-}
-
 install_mise() {
 	# Skip if the desired version is already installed
 	if [ -x "$MISE_BIN" ] && "$MISE_BIN" --version | grep -q "$MISE_VERSION"; then
@@ -164,7 +146,6 @@ install_opencode_plugin_deps() {
 
 install_stow
 install_mise
-install_nix
 stow_dotfiles
 mise_install
 install_tpm
