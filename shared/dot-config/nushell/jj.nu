@@ -22,15 +22,28 @@ def "jj push pr" [rev: string] {
 
 }
 
+def "copy-clipboard" [text: string] {
+  if ($env.WAYLAND_DISPLAY? | is-not-empty) {
+    $text | wl-copy
+  } else if ($env.TMUX? | is-not-empty) {
+    let clients = (^tmux list-clients -F '#{client_name}' | lines | where ($it | is-not-empty))
+    for client in $clients {
+      $text | ^tmux load-buffer -w -t $client -
+    }
+  } else {
+    error make { msg: "No Wayland display or tmux session available to copy to clipboard" }
+  }
+}
+
 def "jj copy desc" [] {
   let pr_link = (gh pr view (^jj log -r @ -T 'bookmarks' --no-graph) --json url | from json | get url)
   let description = (^jj show -r @ -T 'description' --no-patch)
 
-  $"($pr_link)
+  copy-clipboard $"($pr_link)
 
 ```
 ($description)
-```" | wl-copy
+```"
 }
 
 def "jj rebase main" [] {
