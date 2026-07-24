@@ -54,6 +54,9 @@ source (if ($aws_path | path exists) { $aws_path } else { "/dev/null" })
 const direnv_path = ($nu.default-config-dir | path join "direnv.nu")
 source (if ($direnv_path | path exists) { $direnv_path } else { "/dev/null" })
 
+const mise_path = ($nu.default-config-dir | path join "mise.nu")
+source (if ($mise_path | path exists) { $mise_path } else { "/dev/null" })
+
 use bash-env.nu
 
 alias vim = echo no vim
