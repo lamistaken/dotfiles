@@ -53,6 +53,8 @@ font-feature = ss02
 font-feature = ss04
 font-feature = -calt
 
+adjust-cell-height = 1
+
 scrollback-limit=10000000
 
 keybind= ctrl+shift+j=unbind

@@ -210,6 +210,7 @@ local M = {
         proto = { 'buf' },
         rust = { 'rustfmt' },
         sql = { 'sql_formatter' },
+        markdown = { 'mdformat' },
       },
       format_on_save = function(bufnr)
         -- Disable with a global or buffer-local variable

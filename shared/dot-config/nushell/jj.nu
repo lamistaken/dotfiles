@@ -77,6 +77,22 @@ def "jj review pr" [bookmark: string] {
   }
 }
 
+def "jj review pr2" [bookmark: string] {
+  # Fetch latest changes and check out the new bookmark for the PR
+  ^jj git fetch
+  ^jj bookmark track $"($bookmark)@origin"
+  ^jj new $bookmark
+
+  # Open a diff view between the fork point and the PR bookmark
+  let main = (gh pr view (^jj log -r @- -T 'bookmarks' --no-graph) --json baseRefName | from json | get baseRefName)
+  let base = (gh api repos/{owner}/{repo}/compare/($main)...($bookmark) --jq '.merge_base_commit.sha')
+  ^nvim -c $"DiffBanditReview ($base) ($bookmark)"
+
+  # After reviewing, clean up by forgetting the bookmark and returning to main
+  ^jj bookmark forget $bookmark
+  ^jj new 'trunk()'
+}
+
 def "jj edit pr" [bookmark: string] {
   # Fetch latest changes and rebase my current work on top of main
   ^jj git fetch
