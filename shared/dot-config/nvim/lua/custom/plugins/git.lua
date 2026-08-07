@@ -281,7 +281,7 @@ return {
           panel = {
             width = 42,
             commit_height = 10,
-            preview_on_cursor = false,
+            preview_on_cursor = true,
             keys = {
               toggle_stage = false,
               focus_diff = '<CR>',
