@@ -61,10 +61,9 @@ $env.PROMPT_COMMAND = {||
     }
 }
 
-# Set the terminal tab title (OSC 2) and, on a remote SSH host, a distinct
-# background tint (OSC 11) + a marker glyph so remote tabs stand out. Replaces
-# nushell's built-in osc2 (disabled above) which is hardcoded to pwd. Emitted
-# every prompt so it survives full-screen apps (nvim) and zmx reattach redraws.
+# Set the terminal tab title (OSC 2) and a marker glyph so remote tabs stand out. Replaces nushell's
+# built-in osc2 (disabled above) which is hardcoded to pwd. Emitted every prompt so it survives
+# full-screen apps (nvim) and zmx reattach redraws.
 $env.config.hooks.pre_prompt = ($env.config.hooks.pre_prompt | default [] | append {||
     let remote = ('SSH_CONNECTION' in $env)
     let esc = (char -i 0x1b)
@@ -73,16 +72,8 @@ $env.config.hooks.pre_prompt = ($env.config.hooks.pre_prompt | default [] | appe
     # Tab title: zmx session name (or dir), prefixed with a glyph on remote.
     let dir = ($env.PWD | str replace $nu.home-dir "~")
     let base = if 'ZMX_SESSION' in $env { $env.ZMX_SESSION } else { $dir }
-    let title = if $remote { $"󰢹 ($base)" } else { $base }
+    let title = if $remote { $"󰢹  ($base)" } else { $base }
     print -rn $"($esc)]2;($title)($st)"
-
-    # Background: subtle warm tint on remote; reset to the theme default on
-    # local so returning from SSH in the same tab restores the normal bg.
-    if $remote {
-        print -rn $"($esc)]11;#241f2b($st)"
-    } else {
-        print -rn $"($esc)]111($st)"
-    }
 })
 
 source ~/.local/share/atuin/init.nu

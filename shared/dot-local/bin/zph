@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+#
+# zph - "zp here": the zmx picker loop, scoped to the current directory.
+#
+# Pre-fills the picker query with the current dir's base name so existing
+# <base>.N sessions and the [repo] create-row surface immediately: hit an
+# existing session to attach, or the [repo] row to create the next-numbered
+# one. Detach (ctrl+\) drops back into the picker; Esc exits to the shell.
+
+set -uo pipefail
+
+# The picker itself lives with the Ghostty scripts. Override with $ZP_BIN.
+ZP="${ZP_BIN:-$HOME/.config/ghostty/scripts/zp}"
+
+if [[ ! -x $ZP ]]; then
+	printf 'zph: picker not found at %s (set $ZP_BIN)\n' "$ZP" >&2
+	exit 1
+fi
+
+# Guard: if we somehow land inside an existing session (e.g. the split
+# keybind's text raced into the wrong pane), do nothing rather than hijack it.
+if [[ -n ${ZMX_SESSION:-} ]]; then
+	printf 'zph: already attached to zmx session %s\n' "$ZMX_SESSION" >&2
+	exit 0
+fi
+
+# Match zp's dot->underscore session naming (see zp's next_session()).
+base=${PWD##*/}
+first_query=${base//./_}
+
+while true; do
+	if [[ -n $first_query ]]; then
+		FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS:-} --query=${first_query}" "$ZP"
+	else
+		"$ZP"
+	fi
+	rc=$?
+	first_query='' # only pre-fill the first iteration; later loops show everything
+	# 130 = picker cancelled (Esc / no selection); leave the launcher.
+	[[ $rc -eq 130 ]] && break
+done

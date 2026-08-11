@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Ghostty Scrollback Viewer
+Exec=/home/trung-lam/.config/ghostty/scripts/scrollback-view.sh %f
+Terminal=false
+NoDisplay=true
+MimeType=text/plain;

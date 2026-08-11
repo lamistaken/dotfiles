@@ -176,23 +176,6 @@ vim.api.nvim_create_autocmd('RecordingLeave', {
 --   end,
 -- })
 
--- Update tmux window name to the opened file
-vim.api.nvim_create_autocmd('BufEnter', {
-  desc = 'Set tmux window name to the current file name with path depth of 3',
-  callback = function()
-    local file_path = vim.fn.expand '%:~:.:h'
-    local file_name = vim.fn.expand '%:t'
-    local path_parts = vim.split(file_path, '/')
-    local limited_path = table.concat(vim.list_slice(path_parts, math.max(#path_parts - 1, 1)), '/')
-    local display_name = limited_path .. '/' .. file_name
-    if file_name == '' then
-      display_name = '[No Name]'
-    end
-    local cmd = string.format("tmux set -w @win_name '%s'", display_name)
-    os.execute(cmd)
-  end,
-})
-
 -- Set .nomad files to use HCL filetype
 vim.api.nvim_create_autocmd({ 'BufRead', 'BufNewFile' }, {
   pattern = '*.nomad',

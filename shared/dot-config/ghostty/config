@@ -53,6 +53,8 @@ font-feature = ss02
 font-feature = ss04
 font-feature = -calt
 
+split-preserve-zoom = navigation
+
 adjust-cell-height = 1
 
 scrollback-limit=10000000
@@ -85,19 +87,22 @@ keybind = alt+d=scroll_page_fractional:0.5
 # cancel the picker with Esc to exit the launcher.
 keybind = ctrl+a>w=text:bash ~/.config/ghostty/scripts/zmx-select.sh\n
 
-# tmux-style splits (ctrl+a prefix, mirroring tmux's `_` side-by-side and `-` stacked)
+# tmux-style splits (ctrl+a prefix, mirroring tmux's `_` side-by-side and `-` stacked).
 keybind = ctrl+a>shift+_=new_split:right
 keybind = ctrl+a>-=new_split:down
 
-# split focus — alt+hjkl (avoids ctrl+alt, which locks the screen; leaves
-# ctrl+hjkl free for neovim's own split navigation)
-keybind = alt+h=goto_split:left
-keybind = alt+j=goto_split:down
-keybind = alt+k=goto_split:up
-keybind = alt+l=goto_split:right
+keybind = performable:ctrl+h=goto_split:left
+keybind = performable:ctrl+j=goto_split:down
+keybind = performable:ctrl+k=goto_split:up
+keybind = performable:ctrl+l=goto_split:right
 
 # close the current split/pane (tmux `x`)
 keybind = ctrl+a>x=close_surface
 
+# zoom/maximize the current split (tmux `z`)
+keybind = ctrl+a>z=toggle_split_zoom
+
 # new tab (tmux `c`)
-keybind = ctrl+a>n=new_tab
+keybind = ctrl+a>c=new_tab
+
+keybind = ctrl+a>n=write_screen_file:open
