@@ -1,0 +1,83 @@
+/* Ghostty GTK tab bar height tweaks (gtk-titlebar-style = tabs).
+ *
+ * libadwaita's base.css sets several height floors (extracted from the lib):
+ *   tabbar tabbox                  { min-height: 34px; padding: 6px 0; }
+ *   tabbar tab                     { min-height: 26px; padding: 4px; }
+ *   tabbar tab button.image-button { min-height: 24px; min-width: 24px; }
+ * We out-specify each of them (prefixing `.top-bar`, the AdwToolbarView top
+ * bar the tab bar lives in) so our declarations win the cascade, and we hide
+ * the tab icons entirely to reclaim their height.
+ * Tune live with: GTK_DEBUG=interactive ghostty
+ * IMPORTANT: gtk-custom-css only loads at ghostty *process* startup — fully
+ * quit ghostty (all windows) and relaunch, not just open a new window.
+ */
+
+/* Container chain floors. */
+.top-bar tabbar .box,
+.top-bar tabbar > revealer,
+.top-bar tabbar > revealer > box,
+.top-bar tabbar scrolledwindow,
+.top-bar tabbar tabbox {
+  min-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* The tab itself. A small min-height keeps the bar from collapsing too far. */
+.top-bar tabbar tab {
+  min-height: 20px;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 6px;
+  padding-right: 6px;
+  margin: 0;
+  font-size: 0.85em;
+}
+
+/* Close button: match+beat libadwaita's `.image-button` rule, and hide icon. */
+.top-bar tabbar tab button.image-button {
+  min-height: 0;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  -gtk-icon-size: 0;
+}
+
+/* Hide the tab (app) icon too. */
+.top-bar tabbar tab image,
+.top-bar tabbar tab button.image-button image {
+  -gtk-icon-size: 0;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* Action areas around the tabs (new-tab +, dropdown, menu, window controls).
+ * libadwaita floors: `.start-action/.end-action { padding: 6px 5px }`,
+ * `windowcontrols > button { min-width: 24px; padding: 5px }` plus a padded
+ * circle on the button image. Zero the padding and shrink every button/icon. */
+.top-bar tabbar .start-action,
+.top-bar tabbar .end-action {
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.top-bar button,
+.top-bar windowcontrols > button {
+  min-height: 0;
+  min-width: 0;
+  padding: 2px;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.top-bar button image,
+.top-bar windowcontrols > button > image {
+  -gtk-icon-size: 14px;
+  padding: 0;
+  min-height: 0;
+  min-width: 0;
+}

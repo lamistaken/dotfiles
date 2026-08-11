@@ -22,6 +22,11 @@ let carapace_completer = {|spans: list<string>|
 }
 
 $env.config = {
+  shell_integration: {
+    # Disable the built-in OSC 2 title (hardcoded to pwd); we emit our own
+    # title from the pre_prompt hook below so it can include the zmx session.
+    osc2: false
+  }
   completions: {
     external: {
       enable: true
@@ -41,6 +46,30 @@ $env.PATH = ($env.PATH | prepend ($env.HOME | path join ".local/share/mise/shims
 $env.EDITOR = "nvim"
 $env.OPENCODE_CONFIG = ($env.HOME | path join ".config/opencode/personal.json")
 $env.OPENCODE_TUI_CONFIG = ($env.HOME | path join ".config/opencode/personal-tui.json")
+$env.ZP_ROOT = ($env.HOME | path join "repos")
+
+# Prefix the prompt with the current zmx session (if any)
+let default_left_prompt = $env.PROMPT_COMMAND
+$env.PROMPT_COMMAND = {||
+    let base = (do $default_left_prompt)
+    if 'ZMX_SESSION' in $env {
+        $"(ansi magenta_bold)($env.ZMX_SESSION)(ansi reset) ($base)"
+    } else {
+        $base
+    }
+}
+
+# Set the terminal tab title (OSC 2), including the zmx session when present.
+# Replaces nushell's built-in osc2 (disabled above) which is hardcoded to pwd.
+$env.config.hooks.pre_prompt = ($env.config.hooks.pre_prompt | default [] | append {||
+    let dir = ($env.PWD | str replace $nu.home-dir "~")
+    let title = if 'ZMX_SESSION' in $env {
+        $env.ZMX_SESSION
+    } else {
+        $dir
+    }
+    print -rn $"(ansi title)($title)(char -i 0x1b)(char -i 0x5c)"
+})
 
 source ~/.local/share/atuin/init.nu
 source kanagawa.nu
@@ -56,6 +85,9 @@ source (if ($direnv_path | path exists) { $direnv_path } else { "/dev/null" })
 
 const mise_path = ($nu.default-config-dir | path join "mise.nu")
 source (if ($mise_path | path exists) { $mise_path } else { "/dev/null" })
+
+const zmx_path = ($nu.default-config-dir | path join "zmx.nu")
+source (if ($zmx_path | path exists) { $zmx_path } else { "/dev/null" })
 
 use bash-env.nu
 

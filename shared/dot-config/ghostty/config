@@ -58,9 +58,46 @@ adjust-cell-height = 1
 scrollback-limit=10000000
 
 keybind= ctrl+shift+j=unbind
-window-decoration=false
+window-decoration=client
 keybind= ctrl+comma=unbind
+
+# Merge the tab bar into the titlebar so it's a single slim row instead of
+# a separate titlebar + tab bar. Per-tab titles live here too.
+gtk-titlebar-style = tabs
+gtk-wide-tabs = false
+
+# shrink the GTK tab bar height (see gtk.css). `?` suppresses errors if the
+# file is missing (e.g. before re-stow). Tune live with GTK_DEBUG=interactive.
+gtk-custom-css = ?~/.config/ghostty/gtk.css
 
 custom-shader = shaders/cursor_smear.glsl
 shell-integration = zsh
 shell-integration-features = cursor,sudo,title
+
+keybind = ctrl+alt+k=scroll_page_lines:-3
+keybind = ctrl+alt+j=scroll_page_lines:5
+
+keybind = alt+u=scroll_page_fractional:-0.5
+keybind = alt+d=scroll_page_fractional:0.5
+
+# zmx session manager: bootstrap the loop launcher from a bare shell prompt.
+# Once running, detach with ctrl+\ to drop back into the picker automatically;
+# cancel the picker with Esc to exit the launcher.
+keybind = ctrl+a>w=text:bash ~/.config/ghostty/scripts/zmx-select.sh\n
+
+# tmux-style splits (ctrl+a prefix, mirroring tmux's `_` side-by-side and `-` stacked)
+keybind = ctrl+a>shift+_=new_split:right
+keybind = ctrl+a>-=new_split:down
+
+# split focus — alt+hjkl (avoids ctrl+alt, which locks the screen; leaves
+# ctrl+hjkl free for neovim's own split navigation)
+keybind = alt+h=goto_split:left
+keybind = alt+j=goto_split:down
+keybind = alt+k=goto_split:up
+keybind = alt+l=goto_split:right
+
+# close the current split/pane (tmux `x`)
+keybind = ctrl+a>x=close_surface
+
+# new tab (tmux `c`)
+keybind = ctrl+a>n=new_tab

@@ -1,8 +1,8 @@
 return {
-  {
-    'noisesfromspace/touchup.nvim',
-    opts = {},
-  },
+  -- {
+  --   'noisesfromspace/touchup.nvim',
+  --   opts = {},
+  -- },
   {
     'toppair/peek.nvim',
     event = { 'VeryLazy' },
