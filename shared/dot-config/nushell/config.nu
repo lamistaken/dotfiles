@@ -48,6 +48,8 @@ $env.OPENCODE_CONFIG = ($env.HOME | path join ".config/opencode/personal.json")
 $env.OPENCODE_TUI_CONFIG = ($env.HOME | path join ".config/opencode/personal-tui.json")
 $env.ZP_ROOT = ($env.HOME | path join "repos")
 
+$env.SHELL = $nu.current-exe
+
 # Prefix the prompt with the current zmx session (if any)
 let default_left_prompt = $env.PROMPT_COMMAND
 $env.PROMPT_COMMAND = {||
