@@ -1,0 +1,17 @@
+# direnv sources this before every .envrc.
+#
+# `use flake` (direnv stdlib) evals `nix print-dev-env`, which leaks the nix
+# derivation's lowercase `shell` var (= stdenv `bash-minimal`: no readline or
+# programmable completion). nushell looks up env vars case-insensitively, so
+# that `shell` clobbers $SHELL, and `zmx attach` (spawns a login $SHELL) then
+# launches the broken bash -- flooding errors from ~/.bashrc (complete/bind:
+# command not found, shopt: progcomp: invalid shell option name).
+#
+# Reimplement use_flake (a copy of the direnv stdlib body) to drop that leaked
+# var after the eval. Re-sync if direnv ever changes use_flake.
+use_flake() {
+  watch_file flake.nix
+  watch_file flake.lock
+  eval "$(nix print-dev-env --profile "$(direnv_layout_dir)/flake-profile" "$@")"
+  unset shell
+}

@@ -98,6 +98,11 @@ use bash-env.nu
 
 alias vim = echo no vim
 alias s = sesh connect terminal
+# Force the full system bash. Inside a nix devshell (via direnv), the nix
+# `bash-minimal` build shadows the real bash on PATH; it lacks readline and
+# programmable completion, so sourcing ~/.bashrc floods errors (complete/bind
+# not found, progcomp invalid). /bin/bash is the full build on Linux and macOS.
+alias bash = /bin/bash
 
 def git-clean [] {
     git fetch -p;
