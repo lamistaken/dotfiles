@@ -53,8 +53,6 @@ font-feature = ss02
 font-feature = ss04
 font-feature = -calt
 
-split-preserve-zoom = navigation
-
 adjust-cell-height = 1
 
 scrollback-limit=10000000
@@ -62,6 +60,12 @@ scrollback-limit=10000000
 keybind= ctrl+shift+j=unbind
 window-decoration=client
 keybind= ctrl+comma=unbind
+
+# New windows open in ~ instead of inheriting the previous window's cwd.
+# Tabs and splits still inherit (their *-inherit-working-directory options
+# remain at their default of true).
+window-inherit-working-directory = false
+working-directory = home
 
 # Merge the tab bar into the titlebar so it's a single slim row instead of
 # a separate titlebar + tab bar. Per-tab titles live here too.
@@ -75,6 +79,9 @@ gtk-custom-css = ?~/.config/ghostty/gtk.css
 custom-shader = shaders/cursor_smear.glsl
 shell-integration = zsh
 shell-integration-features = cursor,sudo,title
+
+# Let apps read the clipboard without the confirmation popup.
+clipboard-read = allow
 
 keybind = ctrl+alt+k=scroll_page_lines:-3
 keybind = ctrl+alt+j=scroll_page_lines:5

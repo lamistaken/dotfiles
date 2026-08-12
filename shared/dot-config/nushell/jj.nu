@@ -91,6 +91,15 @@ def "jj review pr2" [bookmark: string] {
   ^jj new 'trunk()'
 }
 
+def "jj pr commits" [bookmark: string] {
+  ^jj git fetch
+
+  let main = (gh pr view (^jj log -r @- -T 'bookmarks' --no-graph) --json baseRefName | from json | get baseRefName)
+  let base = (gh api repos/{owner}/{repo}/compare/($main)...($bookmark) --jq '.merge_base_commit.sha')
+
+  $"($main)..($base)"
+}
+
 def "jj edit pr" [bookmark: string] {
   # Fetch latest changes and rebase my current work on top of main
   ^jj git fetch
