@@ -25,13 +25,11 @@ def "jj push pr" [rev: string] {
 def "copy-clipboard" [text: string] {
   if ($env.WAYLAND_DISPLAY? | is-not-empty) {
     $text | wl-copy
-  } else if ($env.TMUX? | is-not-empty) {
-    let clients = (^tmux list-clients -F '#{client_name}' | lines | where ($it | is-not-empty))
-    for client in $clients {
-      $text | ^tmux load-buffer -w -t $client -
-    }
   } else {
-    error make { msg: "No Wayland display or tmux session available to copy to clipboard" }
+    # OSC 52: passes through zmx (transparent PTY) to the terminal emulator,
+    # which sets the system clipboard — works locally and over SSH.
+    let b64 = ($text | encode base64)
+    $"\e]52;c;($b64)\e\\" | save --raw --force /dev/tty
   }
 }
 
