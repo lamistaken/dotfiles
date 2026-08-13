@@ -410,9 +410,12 @@ return {
       local review_group = vim.api.nvim_create_augroup('DiffBanditReviewTab', { clear = true })
 
       -- Suspend: while a diff tab is unfocused, strip its buffer-local maps and
-      -- diff paint from the shared real buffer. During TabLeave the current
-      -- tabpage is still the one being left, so this fires exactly when leaving a
-      -- diff tab (including via gf's :tabedit).
+      -- diff paint from the shared real buffer, cancel any pending repaints, and
+      -- freeze the session's per-buffer autocmds. The gf tab shows the same
+      -- bufnr, so any repaint (scheduled viewport rerender, or TextChanged/edit
+      -- re-diff) would otherwise bleed diff paint into it. During TabLeave the
+      -- current tabpage is still the one being left, so this fires exactly when
+      -- leaving a diff tab (including via gf's :tabedit).
       vim.api.nvim_create_autocmd('TabLeave', {
         group = review_group,
         callback = function()
@@ -430,10 +433,25 @@ return {
           pcall(function()
             s:clear_buffer_paint_namespaces(s.right_buf)
           end)
+          -- Cancel armed repaints (source A: auto-snap viewport rerender; the
+          -- debounced editable refresh) so a deferred paint cannot fire after we
+          -- have left and re-decorate the shared buffer in the gf tab.
+          local uok, ui = pcall(require, 'diffbandit.util.ui')
+          if uok then
+            pcall(ui.cancel_schedule_once, s, 'viewport_rerender_scheduled')
+            pcall(ui.cancel_schedule_once, s, 'overview_rerender_scheduled')
+            pcall(ui.cancel_schedule_once, s, 'editable_right_refresh_scheduled')
+          end
+          -- Freeze the session's own autocmds (source B: TextChanged/InsertLeave
+          -- on right_buf re-diff and repaint). Recreated on TabEnter below.
+          if s.autocmd_group then
+            pcall(vim.api.nvim_del_augroup_by_id, s.autocmd_group)
+          end
         end,
       })
 
-      -- Resume: reinstall maps and repaint the diff when its tab regains focus.
+      -- Resume: recreate the frozen session autocmds, reinstall maps, and repaint
+      -- the diff when its tab regains focus.
       vim.api.nvim_create_autocmd('TabEnter', {
         group = review_group,
         callback = function()
@@ -447,12 +465,39 @@ return {
               return
             end
             pcall(function()
+              s:setup_autocmds()
+            end)
+            pcall(function()
               s:setup_keymaps()
             end)
             pcall(function()
               s:request_viewport_rerender()
             end)
           end)
+        end,
+      })
+
+      -- Compensating dispose guard: while a session is frozen (TabLeave above
+      -- deleted its own TabClosed/BufWipeout hooks), a :tabclose from another tab
+      -- would otherwise leak it. Dispose any session whose tabpage is gone.
+      vim.api.nvim_create_autocmd('TabClosed', {
+        group = review_group,
+        callback = function()
+          local ok, state = pcall(require, 'diffbandit.state')
+          if not ok then
+            return
+          end
+          local dead = {}
+          for tp, s in pairs(state.sessions) do
+            if not vim.api.nvim_tabpage_is_valid(tp) and not s.disposed then
+              dead[#dead + 1] = s
+            end
+          end
+          for _, s in ipairs(dead) do
+            pcall(function()
+              s:dispose()
+            end)
+          end
         end,
       })
 
