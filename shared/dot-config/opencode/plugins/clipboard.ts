@@ -10,7 +10,7 @@ export const ClipboardPlugin: Plugin = async () => {
         description:
           "Copy text to the system clipboard. Uses wl-copy (Wayland) locally, " +
           "and falls back to tmux (OSC 52) so it also works inside an SSH session. " +
-          "Use this when the user asks you to copy something to their clipboard.",
+          "Use this when the user asks you to send them a command or copy something to their clipboard.",
         args: {
           text: tool.schema.string().describe("The text to copy to the clipboard"),
         },

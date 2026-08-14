@@ -299,8 +299,10 @@ output "Samsung Electric Company LS49AG95 HNTR800769" {
 // To run a shell command (with variables, pipes, etc.), use spawn-sh-at-startup:
 // spawn-sh-at-startup "qs -c ~/source/qs/MyAwesomeShell"
 
-spawn-sh-at-startup "wl-paste --type text --watch cliphist store"
-spawn-sh-at-startup "wl-paste --type image --watch cliphist store"
+// Clipboard history is now handled natively by DMS (ext-data-control-v1).
+// Old cliphist watchers removed to avoid two clipboard managers conflicting.
+// spawn-sh-at-startup "wl-paste --type text --watch cliphist store"
+// spawn-sh-at-startup "wl-paste --type image --watch cliphist store"
 // spawn-sh-at-startup "dms run"
 
 hotkey-overlay {
