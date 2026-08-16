@@ -50,6 +50,12 @@ $env.ZP_ROOT = ($env.HOME | path join "repos")
 
 $env.SHELL = $nu.current-exe
 
+# Check if forwarded D-Bus socket exists and set the environment variable
+let dbus_socket = $"/tmp/forwarded-dbus-($env.USER).sock"
+if ($dbus_socket | path exists) {
+    $env.DBUS_SESSION_BUS_ADDRESS = $"unix:path=($dbus_socket)"
+}
+
 # Prefix the prompt with the current zmx session (if any)
 let default_left_prompt = $env.PROMPT_COMMAND
 $env.PROMPT_COMMAND = {||
