@@ -97,7 +97,7 @@ def "jj pick pr" [] {
     $lines
     | str join (char newline)
     | ^fzf --ansi --reverse --border --height 80%
-        --delimiter (char tab) --with-nth "2.." --nth "2.."
+        --delimiter (char tab) --with-nth "2.."
         --prompt "PR> "
         --header "enter: pick"
         --color "bg+:#2A2A37,bg:#1F1F28,spinner:#7FB4CA,hl:#7E9CD8"
