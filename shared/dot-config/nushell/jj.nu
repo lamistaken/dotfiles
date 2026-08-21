@@ -75,7 +75,45 @@ def "jj review pr" [bookmark: string] {
   }
 }
 
-def "jj review pr2" [bookmark: string] {
+def "jj pick pr" [] {
+  let prs = (gh pr list --json number,title,headRefName,author | from json)
+  if ($prs | is-empty) { error make { msg: "No open PRs found" } }
+
+  # Kanagawa Wave palette
+  let c_num    = (ansi { fg: "#98BB6C" })  # springGreen
+  let c_branch = (ansi { fg: "#7E9CD8" })  # crystalBlue
+  let c_title  = (ansi { fg: "#DCD7BA" })  # fujiWhite
+  let c_author = (ansi { fg: "#727169" })  # fujiGray
+  let reset    = (ansi reset)
+
+  let bw = ($prs | get headRefName | each { str length } | math max)
+  let lines = ($prs | each {|pr|
+    let num    = ($"#($pr.number)" | fill -a right -w 5)
+    let branch = ($pr.headRefName | fill -a left -w $bw)
+    $"($pr.number)(char tab)($c_num)($num)($reset)  ($c_branch)($branch)($reset)  ($c_title)($pr.title)($reset)  ($c_author)@($pr.author.login)($reset)"
+  })
+
+  let selected = (
+    $lines
+    | str join (char newline)
+    | ^fzf --ansi --reverse --border --height 80%
+        --delimiter (char tab) --with-nth "2.." --nth "2.."
+        --prompt "PR> "
+        --header "enter: pick"
+        --color "bg+:#2A2A37,bg:#1F1F28,spinner:#7FB4CA,hl:#7E9CD8"
+        --color "fg:#DCD7BA,header:#727169,info:#658594,pointer:#957FB8"
+        --color "marker:#98BB6C,fg+:#DCD7BA,prompt:#7E9CD8,hl+:#E6C384"
+        --color "border:#54546D"
+  )
+  if ($selected | is-empty) { error make { msg: "No PR selected" } }
+
+  let num = ($selected | split row (char tab) | get 0 | into int)
+  $prs | where number == $num | get headRefName | first
+}
+
+def "jj review pr2" [bookmark?: string] {
+  let bookmark = if ($bookmark | is-not-empty) { $bookmark } else { jj pick pr }
+
   # Fetch latest changes and check out the new bookmark for the PR
   ^jj git fetch
   ^jj bookmark track $"($bookmark)@origin"
@@ -91,7 +129,9 @@ def "jj review pr2" [bookmark: string] {
   ^jj new 'trunk()'
 }
 
-def "jj pr commits" [bookmark: string] {
+def "jj pr commits" [bookmark?: string] {
+  let bookmark = if ($bookmark | is-not-empty) { $bookmark } else { jj pick pr }
+
   ^jj git fetch
 
   let main = (gh pr view (^jj log -r @- -T 'bookmarks' --no-graph) --json baseRefName | from json | get baseRefName)
