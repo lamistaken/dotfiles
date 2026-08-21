@@ -44,7 +44,6 @@ $env.PATH = ($env.PATH | prepend ($env.HOME | path join ".local/bin"))
 $env.PATH = ($env.PATH | prepend ($env.HOME | path join ".local/share/mise/shims"))
 
 $env.EDITOR = "nvim"
-$env.OPENCODE_CONFIG = ($env.HOME | path join ".config/opencode/personal.json")
 $env.OPENCODE_TUI_CONFIG = ($env.HOME | path join ".config/opencode/personal-tui.json")
 $env.ZP_ROOT = ($env.HOME | path join "repos")
 
