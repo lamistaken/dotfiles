@@ -137,7 +137,7 @@ def "jj pr commits" [bookmark?: string] {
   let main = (gh pr view (^jj log -r @- -T 'bookmarks' --no-graph) --json baseRefName | from json | get baseRefName)
   let base = (gh api repos/{owner}/{repo}/compare/($main)...($bookmark) --jq '.merge_base_commit.sha')
 
-  $"($main)..($base)"
+  $"($base)..($bookmark)"
 }
 
 def "jj edit pr" [bookmark: string] {
