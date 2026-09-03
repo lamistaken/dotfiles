@@ -108,29 +108,6 @@ install_tpm() {
 	git clone https://github.com/tmux-plugins/tpm "$tpm_dir"
 }
 
-set_default_shell() {
-	# Point at the mise shim rather than a versioned install path so that
-	# bumping the nushell pin doesn't require re-registering the shell.
-	if [ ! -e "$NU_SHIM" ]; then
-		echo "nushell shim not found at $NU_SHIM; did mise_install run?" >&2
-		return 1
-	fi
-
-	# Register nu as a valid login shell
-	if ! grep -qx "$NU_SHIM" /etc/shells; then
-		echo "Registering $NU_SHIM in /etc/shells..."
-		echo "$NU_SHIM" | sudo tee -a /etc/shells >/dev/null
-	fi
-
-	if [ "$(getent passwd "$USER" | cut -d: -f7)" = "$NU_SHIM" ]; then
-		echo "Default shell already set to nushell"
-		return
-	fi
-
-	echo "Setting nushell as the default shell for $USER..."
-	sudo chsh -s "$NU_SHIM" "$USER"
-}
-
 install_opencode_plugin_deps() {
 	# The opencode clipboard plugin imports @opencode-ai/plugin. It is stow-symlinked
 	# into ~/.config/opencode/plugins, so opencode's bundler resolves the import from
@@ -149,5 +126,4 @@ install_mise
 stow_dotfiles
 mise_install
 install_tpm
-set_default_shell
 install_opencode_plugin_deps
