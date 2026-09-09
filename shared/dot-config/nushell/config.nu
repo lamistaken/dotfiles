@@ -22,11 +22,6 @@ let carapace_completer = {|spans: list<string>|
 }
 
 $env.config = {
-  shell_integration: {
-    # Disable the built-in OSC 2 title (hardcoded to pwd); we emit our own
-    # title from the pre_prompt hook below so it can include the zmx session.
-    osc2: false
-  }
   completions: {
     external: {
       enable: true
@@ -45,41 +40,12 @@ $env.PATH = ($env.PATH | prepend ($env.HOME | path join ".local/share/mise/shims
 
 $env.EDITOR = "nvim"
 $env.OPENCODE_TUI_CONFIG = ($env.HOME | path join ".config/opencode/personal-tui.json")
-$env.ZP_ROOT = ($env.HOME | path join "repos")
-
-$env.SHELL = $nu.current-exe
 
 # Check if forwarded D-Bus socket exists and set the environment variable
 let dbus_socket = $"/tmp/forwarded-dbus-($env.USER).sock"
 if ($dbus_socket | path exists) {
     $env.DBUS_SESSION_BUS_ADDRESS = $"unix:path=($dbus_socket)"
 }
-
-# Prefix the prompt with the current zmx session (if any)
-let default_left_prompt = $env.PROMPT_COMMAND
-$env.PROMPT_COMMAND = {||
-    let base = (do $default_left_prompt)
-    if 'ZMX_SESSION' in $env {
-        $"(ansi magenta_bold)($env.ZMX_SESSION)(ansi reset) ($base)"
-    } else {
-        $base
-    }
-}
-
-# Set the terminal tab title (OSC 2) and a marker glyph so remote tabs stand out. Replaces nushell's
-# built-in osc2 (disabled above) which is hardcoded to pwd. Emitted every prompt so it survives
-# full-screen apps (nvim) and zmx reattach redraws.
-$env.config.hooks.pre_prompt = ($env.config.hooks.pre_prompt | default [] | append {||
-    let remote = ('SSH_CONNECTION' in $env)
-    let esc = (char -i 0x1b)
-    let st = $"($esc)(char -i 0x5c)"
-
-    # Tab title: zmx session name (or dir), prefixed with a glyph on remote.
-    let dir = ($env.PWD | str replace $nu.home-dir "~")
-    let base = if 'ZMX_SESSION' in $env { $env.ZMX_SESSION } else { $dir }
-    let title = if $remote { $"󰢹  ($base)" } else { $base }
-    print -rn $"($esc)]2;($title)($st)"
-})
 
 source ~/.local/share/atuin/init.nu
 source kanagawa.nu
@@ -95,9 +61,6 @@ source (if ($direnv_path | path exists) { $direnv_path } else { "/dev/null" })
 
 const mise_path = ($nu.default-config-dir | path join "mise.nu")
 source (if ($mise_path | path exists) { $mise_path } else { "/dev/null" })
-
-const zmx_path = ($nu.default-config-dir | path join "zmx.nu")
-source (if ($zmx_path | path exists) { $zmx_path } else { "/dev/null" })
 
 use bash-env.nu
 

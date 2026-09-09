@@ -58,58 +58,9 @@ adjust-cell-height = 1
 scrollback-limit=10000000
 
 keybind= ctrl+shift+j=unbind
-window-decoration=client
+window-decoration=false
 keybind= ctrl+comma=unbind
-
-# New windows open in ~ instead of inheriting the previous window's cwd.
-# Tabs and splits still inherit (their *-inherit-working-directory options
-# remain at their default of true).
-window-inherit-working-directory = false
-working-directory = home
-
-# Merge the tab bar into the titlebar so it's a single slim row instead of
-# a separate titlebar + tab bar. Per-tab titles live here too.
-gtk-titlebar-style = tabs
-gtk-wide-tabs = false
-
-# shrink the GTK tab bar height (see gtk.css). `?` suppresses errors if the
-# file is missing (e.g. before re-stow). Tune live with GTK_DEBUG=interactive.
-gtk-custom-css = ?~/.config/ghostty/gtk.css
 
 custom-shader = shaders/cursor_smear.glsl
 shell-integration = zsh
 shell-integration-features = cursor,sudo,title
-
-# Let apps read the clipboard without the confirmation popup.
-clipboard-read = allow
-
-keybind = ctrl+alt+k=scroll_page_lines:-3
-keybind = ctrl+alt+j=scroll_page_lines:5
-
-keybind = alt+u=scroll_page_fractional:-0.5
-keybind = alt+d=scroll_page_fractional:0.5
-
-# zmx session manager: bootstrap the loop launcher from a bare shell prompt.
-# Once running, detach with ctrl+\ to drop back into the picker automatically;
-# cancel the picker with Esc to exit the launcher.
-keybind = ctrl+a>w=text:bash ~/.config/ghostty/scripts/zmx-select.sh\n
-
-# tmux-style splits (ctrl+a prefix, mirroring tmux's `_` side-by-side and `-` stacked).
-keybind = ctrl+a>shift+_=new_split:right
-keybind = ctrl+a>-=new_split:down
-
-keybind = performable:ctrl+h=goto_split:left
-keybind = performable:ctrl+j=goto_split:down
-keybind = performable:ctrl+k=goto_split:up
-keybind = performable:ctrl+l=goto_split:right
-
-# close the current split/pane (tmux `x`)
-keybind = ctrl+a>x=close_surface
-
-# zoom/maximize the current split (tmux `z`)
-keybind = ctrl+a>z=toggle_split_zoom
-
-# new tab (tmux `c`)
-keybind = ctrl+a>c=new_tab
-
-keybind = ctrl+a>n=write_screen_file:open
