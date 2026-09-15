@@ -25,7 +25,7 @@ return {
       vim.api.nvim_create_autocmd({ 'BufEnter', 'WinEnter' }, {
         callback = function()
           if vim.bo.filetype == 'sidekick_terminal' and vim.bo.buftype == 'terminal' then
-            vim.cmd('startinsert')
+            vim.cmd 'startinsert'
           end
         end,
       })
@@ -62,10 +62,7 @@ return {
           --   cmd = { 'opencode', '--port' },
           --   is_proc = 'opencode --port',
           -- },
-          opencode_sbx = {
-            cmd = { 'sb', '--no-pull', '--agent', 'opencode', '--workspace', vim.fn.getcwd(), 'repos', 'local' },
-            is_proc = 'sandbox exec.*opencode$',
-          },
+          opencode_remote = {},
           claude = {
             cmd = { 'sb', '--no-pull', '--agent', 'claude', '--workspace', vim.fn.getcwd(), 'repos', 'local', '--', '--model', 'opusplan' },
             is_proc = 'sandbox exec.*claude$',

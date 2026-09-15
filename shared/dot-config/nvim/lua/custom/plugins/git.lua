@@ -124,7 +124,7 @@ return {
     config = function()
       require('jj').setup {
         diff = {
-          backend = 'diffbandit',
+          backend = 'codediff',
         },
       }
 
