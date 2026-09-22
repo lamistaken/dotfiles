@@ -64,3 +64,4 @@ keybind= ctrl+comma=unbind
 custom-shader = shaders/cursor_smear.glsl
 shell-integration = zsh
 shell-integration-features = cursor,sudo,title
+clipboard-write = allow
