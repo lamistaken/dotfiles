@@ -359,6 +359,18 @@ window-rule {
     open-floating true
 }
 
+// Float the Zoom annotation toolbar.
+window-rule {
+    match app-id=r#"^zoom$"#
+    open-floating true
+    open-focused true
+}
+window-rule {
+    match app-id=r#"^zoom$"# title="^(Meeting|Zoom Workplace.*)$"
+    open-floating false
+    open-focused false
+}
+
 // Example: block out two password managers from screen capture.
 // (This example rule is commented out with a "/-" in front.)
 /-window-rule {

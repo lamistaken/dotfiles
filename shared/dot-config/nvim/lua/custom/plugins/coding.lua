@@ -117,7 +117,14 @@ local M = {
       signature = { enabled = false },
       sources = {
         default = { 'lsp', 'path', 'snippets', 'buffer' },
+        per_filetype = {
+          sql = { 'snippets', 'dadbod', 'buffer' },
+        },
         providers = {
+          dadbod = {
+            name = 'Dadbod',
+            module = 'vim_dadbod_completion.blink',
+          },
           markdown = {
             name = 'RenderMarkdown',
             module = 'render-markdown.integ.blink',
@@ -211,6 +218,7 @@ local M = {
         rust = { 'rustfmt' },
         sql = { 'sql_formatter' },
         markdown = { 'mdformat' },
+        svelte = { 'prettier' },
       },
       format_on_save = function(bufnr)
         -- Disable with a global or buffer-local variable

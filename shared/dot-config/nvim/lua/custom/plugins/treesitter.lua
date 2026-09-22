@@ -112,4 +112,19 @@ return {
       end,
     },
   },
+  {
+    'nvim-treesitter/nvim-treesitter-context',
+    event = { 'BufReadPost', 'BufWritePost', 'BufNewFile' },
+    dependencies = { 'nvim-treesitter/nvim-treesitter' },
+    keys = {
+      {
+        '<leader>ut',
+        function()
+          require('treesitter-context').toggle()
+        end,
+        desc = 'Toggle Treesitter Context',
+      },
+    },
+    opts = {},
+  },
 }

@@ -43,11 +43,18 @@ return {
     priority = 1000,
     opts = {
       gh = {},
+      input = { enabled = true },
       picker = {
         formatters = {
           file = {
             truncate = 120,
           },
+        },
+        sources = {
+          lsp_references = { format = require('snacks.picker.format').filename },
+          lsp_definitions = { format = require('snacks.picker.format').filename },
+          lsp_implementations = { format = require('snacks.picker.format').filename },
+          lsp_type_definitions = { format = require('snacks.picker.format').filename },
         },
       },
       notifier = {

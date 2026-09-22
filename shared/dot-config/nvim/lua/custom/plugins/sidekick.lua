@@ -58,11 +58,22 @@ return {
         tools = {
           aider = nil,
           gemini = nil,
-          -- opencode = {
-          --   cmd = { 'opencode', '--port' },
-          --   is_proc = 'opencode --port',
-          -- },
-          opencode_remote = {},
+          -- Attach a LOCAL opencode TUI to a headless `opencode serve` running
+          -- on the remote.
+          ocr = {
+            cmd = {
+              'bash',
+              '-c',
+              [[
+rel="${PWD#$HOME/coder-repos/sync-}"
+exec "$HOME/.opencode/bin/opencode" attach "http://127.0.0.1:4096" --dir "/home/coder/repos/$rel"
+]],
+            },
+            is_proc = 'opencode attach',
+            -- Let opencode's TUI handle mouse/scroll natively instead of
+            -- sidekick's dump-based scrollback (which intercepts mouse events).
+            native_scroll = true,
+          },
           claude = {
             cmd = { 'sb', '--no-pull', '--agent', 'claude', '--workspace', vim.fn.getcwd(), 'repos', 'local', '--', '--model', 'opusplan' },
             is_proc = 'sandbox exec.*claude$',
