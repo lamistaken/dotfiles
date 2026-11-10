@@ -1,3 +1,11 @@
+# Live tmux sessions first, then everything else.
+sort_order = ["tmux", "config", "tmuxinator", "zoxide"]
+
+[[name_substitution]]
+find = "^~/coder-repos/([^/]+)/([^/]+).*$"
+replace = "$1/$2"
+regex = true
+
 [[session]]
 name = "terminal"
 path = "~"

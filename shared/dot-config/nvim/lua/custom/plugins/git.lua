@@ -124,85 +124,42 @@ return {
     config = function()
       require('jj').setup {
         diff = {
-          backend = 'codediff',
+          backend = 'diffbandit',
         },
       }
 
       local jjdiff = require 'jj.diff'
       local jjutils = require 'jj.utils'
 
-      -- Files jj considers changed for a revset range, as git pathspecs.
-      -- Restricts diffbandit to jj's view, dropping submodule/worktree noise.
-      local function jj_paths(args)
-        local cmd = { 'jj', 'diff', '-T', 'path ++ "\\n"' }
-        vim.list_extend(cmd, args)
-        local files = vim.tbl_filter(function(f)
-          return f ~= ''
-        end, vim.fn.systemlist(cmd))
-        if vim.v.shell_error ~= 0 then
-          return nil
+      -- diffbandit's jj branch detects .jj and runs a native jj backend that
+      -- accepts revsets directly, so we only route jj.nvim's diff hooks to it.
+      -- The diffbandit API returns (nil, err) instead of notifying.
+      local function report(ok, err)
+        if not ok and err then
+          vim.notify('diffbandit: ' .. tostring(err), vim.log.levels.WARN)
         end
-        return files
+      end
+
+      local function compare(opts)
+        report(require('diffbandit').git_compare(opts.left, opts.right, { direct = true }))
       end
 
       jjdiff.register_backend('diffbandit', {
         -- `D` on a single revision -> show what that commit changed
         show_revision = function(opts)
-          local commit_id = jjutils.get_commit_id(opts.rev)
-          if not commit_id then
-            return
+          local db = require 'diffbandit'
+          -- Working-copy revision: diff @- -> live @ so the right pane holds
+          -- editable files (LSP works). Otherwise show the commit read-only.
+          if jjutils.get_commit_id(opts.rev) == jjutils.get_current_commit_id() then
+            report(db.git { mode = 'all', base = opts.rev .. '-' })
+          else
+            report(db.git_commit(opts.rev))
           end
-          local files = jj_paths { '-r', opts.rev }
-          if not files or #files == 0 then
-            vim.notify('diffbandit: no jj changes for ' .. opts.rev, vim.log.levels.WARN)
-            return
-          end
-          -- Working-copy revision: diff base..worktree so the right pane holds
-          -- live files (LSP works). Otherwise show the commit read-only.
-          if commit_id == jjutils.get_current_commit_id() then
-            local base = jjutils.get_commit_id(opts.rev .. '-')
-            if base then
-              require('diffbandit').git {
-                mode = 'all',
-                base = base,
-                pathspecs = files,
-                include_untracked = false,
-              }
-              return
-            end
-          end
-          require('diffbandit').git_commit(commit_id, { pathspecs = files })
         end,
 
-        -- `D` on a multi-selection -> compare the two endpoints directly
-        diff_revisions = function(opts)
-          local left = jjutils.get_commit_id(opts.left)
-          local right = jjutils.get_commit_id(opts.right)
-          if not (left and right) then
-            return
-          end
-          local files = jj_paths { '--from', opts.left, '--to', opts.right }
-          if not files or #files == 0 then
-            vim.notify('diffbandit: no jj changes for ' .. opts.left .. '..' .. opts.right, vim.log.levels.WARN)
-            return
-          end
-          require('diffbandit').git_compare(left, right, { direct = true, pathspecs = files })
-        end,
-
-        -- History variant -> same endpoints, direct compare
-        diff_history_revisions = function(opts)
-          local left = jjutils.get_commit_id(opts.left)
-          local right = jjutils.get_commit_id(opts.right)
-          if not (left and right) then
-            return
-          end
-          local files = jj_paths { '--from', opts.left, '--to', opts.right }
-          if not files or #files == 0 then
-            vim.notify('diffbandit: no jj changes for ' .. opts.left .. '..' .. opts.right, vim.log.levels.WARN)
-            return
-          end
-          require('diffbandit').git_compare(left, right, { direct = true, pathspecs = files })
-        end,
+        -- `D` on a multi-selection / history -> compare the endpoints directly
+        diff_revisions = compare,
+        diff_history_revisions = compare,
       })
     end,
     cmd = { 'Jdiff' },
@@ -249,139 +206,23 @@ return {
     'oug-t/difi.nvim',
     event = 'VeryLazy',
     keys = {
-      -- Context-aware: Syncs with CLI target (e.g. main) or defaults to HEAD
       { '<leader>df', ':Difi<CR>', desc = 'Toggle Difi' },
     },
   },
   {
     'CoreyKaylor/diffbandit.nvim',
+    branch = 'jj',
     config = function()
       require('diffbandit').setup {
         diff = {
           ignore_whitespace = false,
         },
         navigation = {
-          initial_focus = 'right',
-          align_on_jump = true,
-          align_strategy = 'change_top',
-          document_keys = {
-            top = '[d',
-            bottom = ']d',
-          },
-          snap_key = ']s',
-        },
-        git = {
-          default_mode = 'all',
-          include_untracked = true,
-          find_renames = true,
-          file_keys = {
-            next = '<Tab>',
-            prev = '<S-Tab>',
-          },
-          panel = {
-            width = 42,
-            commit_height = 10,
-            preview_on_cursor = true,
-            keys = {
-              toggle_stage = false,
-              focus_diff = '<CR>',
-              focus_panel = 'C',
-              focus_commit = false,
-              file_actions = false,
-              toggle_amend = false,
-              refresh = 'R',
-              close = 'q',
-            },
-            staged_indicator = {
-              unstaged = '',
-              partial = '',
-              staged = '',
-            },
-          },
+          snap_key = 'gs',
         },
         merge = {
-          result_initial_content = 'base',
-          auto_apply_non_conflicting = false,
-          resolve_on_write = true,
-          line_endings = {
-            warn = true,
-          },
           keys = {
-            next_conflict = ']c',
-            prev_conflict = '[c',
-            accept_local = '>>',
-            accept_remote = '<<',
-            accept_both = 'gb',
-            apply_non_conflicting = 'gA',
-            focus_panel = 'C',
-            snap = ']s',
-            toggle_panel = 'gzp',
-            toggle_local = 'gzh',
-            toggle_remote = 'gzl',
-            show_all = 'gza',
-            close = 'q',
-          },
-        },
-        folder = {
-          gutter_width = 7,
-          columns = {
-            size = true,
-            modified = true,
-          },
-          compare = {
-            mode = 'digest',
-            backend = 'auto',
-            batch_size = 64,
-            max_concurrency = 2,
-            debounce_ms = 50,
-          },
-          filters = {
-            include = {},
-            exclude = {},
-          },
-          keys = {
-            open = '<CR>',
-            alternate_open = 'o',
-            toggle_expand = '<Space>',
-            alternate_toggle_expand = 'za',
-            expand_all = 'zR',
-            collapse_all = 'zM',
-            next_diff = ']c',
-            prev_diff = '[c',
-            refresh = 'R',
-            filter = 's',
-            close = 'q',
-          },
-        },
-        ui = {
-          -- Connector core width. Defaults fix the gutter at 9 columns
-          -- (min == max). Raise connector_max_width to allow once-per-document
-          -- pressure expansion; set both equal for a different fixed width.
-          connector_width = 9,
-          connector_max_width = 9,
-          scroll_debounce_ms = 16,
-          split_blend = 0.3,
-          overview = {
-            enabled = true,
-            width = 1,
-            cursor = true,
-          },
-          status = {
-            enabled = false,
-            icons = 'auto',
-          },
-          theme = {
-            auto_refresh = true,
-            semantic_blend = 0.3,
-            change_emphasis_strength = 0.16,
-            min_background_delta = 0.08,
-            colors = {
-              add = nil,
-              delete = nil,
-              change = nil,
-              change_emphasis = nil,
-            },
-            highlights = {},
+            snap = 'gs',
           },
         },
         actions = {
@@ -395,111 +236,7 @@ return {
         },
       }
 
-      vim.api.nvim_create_user_command('DiffBanditReview', function(o)
-        local base, target = o.fargs[1], o.fargs[2] or '@'
-        local files = vim.tbl_filter(function(f)
-          return f ~= ''
-        end, vim.fn.systemlist { 'jj', 'diff', '--from', base, '--to', target, '-T', 'path ++ "\\n"' })
-        if vim.v.shell_error ~= 0 or #files == 0 then
-          vim.notify('DiffBanditReview: no jj changes (' .. base .. '..' .. target .. ')', vim.log.levels.WARN)
-          return
-        end
-        require('diffbandit').git { mode = 'all', base = base, pathspecs = files, include_untracked = false }
-      end, { nargs = '+' })
-
-      local review_group = vim.api.nvim_create_augroup('DiffBanditReviewTab', { clear = true })
-
-      -- Suspend: while a diff tab is unfocused, strip its buffer-local maps and
-      -- diff paint from the shared real buffer, cancel any pending repaints, and
-      -- freeze the session's per-buffer autocmds. The gf tab shows the same
-      -- bufnr, so any repaint (scheduled viewport rerender, or TextChanged/edit
-      -- re-diff) would otherwise bleed diff paint into it. During TabLeave the
-      -- current tabpage is still the one being left, so this fires exactly when
-      -- leaving a diff tab (including via gf's :tabedit).
-      vim.api.nvim_create_autocmd('TabLeave', {
-        group = review_group,
-        callback = function()
-          local ok, state = pcall(require, 'diffbandit.state')
-          if not ok then
-            return
-          end
-          local s = state.sessions[vim.api.nvim_get_current_tabpage()]
-          if not s or s.disposed then
-            return
-          end
-          pcall(function()
-            s:clear_keymaps()
-          end)
-          pcall(function()
-            s:clear_buffer_paint_namespaces(s.right_buf)
-          end)
-          -- Cancel armed repaints (source A: auto-snap viewport rerender; the
-          -- debounced editable refresh) so a deferred paint cannot fire after we
-          -- have left and re-decorate the shared buffer in the gf tab.
-          local uok, ui = pcall(require, 'diffbandit.util.ui')
-          if uok then
-            pcall(ui.cancel_schedule_once, s, 'viewport_rerender_scheduled')
-            pcall(ui.cancel_schedule_once, s, 'overview_rerender_scheduled')
-            pcall(ui.cancel_schedule_once, s, 'editable_right_refresh_scheduled')
-          end
-          -- Freeze the session's own autocmds (source B: TextChanged/InsertLeave
-          -- on right_buf re-diff and repaint). Recreated on TabEnter below.
-          if s.autocmd_group then
-            pcall(vim.api.nvim_del_augroup_by_id, s.autocmd_group)
-          end
-        end,
-      })
-
-      -- Resume: recreate the frozen session autocmds, reinstall maps, and repaint
-      -- the diff when its tab regains focus.
-      vim.api.nvim_create_autocmd('TabEnter', {
-        group = review_group,
-        callback = function()
-          vim.schedule(function()
-            local ok, state = pcall(require, 'diffbandit.state')
-            if not ok then
-              return
-            end
-            local s = state.sessions[vim.api.nvim_get_current_tabpage()]
-            if not s or s.disposed then
-              return
-            end
-            pcall(function()
-              s:setup_autocmds()
-            end)
-            pcall(function()
-              s:setup_keymaps()
-            end)
-            pcall(function()
-              s:request_viewport_rerender()
-            end)
-          end)
-        end,
-      })
-
-      -- Compensating dispose guard: while a session is frozen (TabLeave above
-      -- deleted its own TabClosed/BufWipeout hooks), a :tabclose from another tab
-      -- would otherwise leak it. Dispose any session whose tabpage is gone.
-      vim.api.nvim_create_autocmd('TabClosed', {
-        group = review_group,
-        callback = function()
-          local ok, state = pcall(require, 'diffbandit.state')
-          if not ok then
-            return
-          end
-          local dead = {}
-          for tp, s in pairs(state.sessions) do
-            if not vim.api.nvim_tabpage_is_valid(tp) and not s.disposed then
-              dead[#dead + 1] = s
-            end
-          end
-          for _, s in ipairs(dead) do
-            pcall(function()
-              s:dispose()
-            end)
-          end
-        end,
-      })
+      local review_group = vim.api.nvim_create_augroup('DiffBanditReview', { clear = true })
 
       -- gf on the diff pane + window-option normalization for foreign windows.
       vim.api.nvim_create_autocmd({ 'WinEnter', 'BufWinEnter' }, {
@@ -515,12 +252,12 @@ return {
           local here = state.sessions[vim.api.nvim_get_current_tabpage()]
 
           -- Auto-snap toggle on either content pane. While enabled (nil == on by
-          -- default) the CursorMoved autocmd below keeps the opposite pane aligned
-          -- to the focused cursor; ]S flips the per-session flag. We deliberately
-          -- do NOT map <C-d>/<C-u> here so neoscroll's smooth scrolling stays
-          -- intact — snapping rides its per-line CursorMoved steps instead.
+          -- default) the CursorHold autocmd below snaps the opposite pane to the
+          -- focused cursor once it goes idle; gS flips the per-session flag. We
+          -- deliberately do NOT map <C-d>/<C-u> here so neoscroll's smooth
+          -- scrolling stays intact.
           if here and ((buf == here.left_buf and win == here.left_win) or (buf == here.right_buf and win == here.right_win)) then
-            vim.keymap.set('n', ']S', function()
+            vim.keymap.set('n', 'gS', function()
               here._auto_snap = not (here._auto_snap ~= false)
               vim.notify('DiffBandit auto-snap ' .. (here._auto_snap and 'ON' or 'OFF'))
               if here._auto_snap then
@@ -570,7 +307,7 @@ return {
         end,
       })
 
-      -- Auto-snap: when enabled (default on; toggled per session with ]S), snap
+      -- Auto-snap: when enabled (default on; toggled per session with gS), snap
       -- the opposite pane to the focused cursor after it goes idle
       vim.api.nvim_create_autocmd('CursorHold', {
         group = review_group,

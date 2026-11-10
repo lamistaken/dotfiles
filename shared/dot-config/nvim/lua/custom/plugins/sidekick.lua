@@ -60,7 +60,7 @@ return {
           gemini = nil,
           -- Attach a LOCAL opencode TUI to a headless `opencode serve` running
           -- on the remote.
-          ocr = {
+          opencode = {
             cmd = {
               'bash',
               '-c',

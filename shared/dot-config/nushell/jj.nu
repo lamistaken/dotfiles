@@ -122,7 +122,7 @@ def "jj review pr2" [bookmark?: string] {
   # Open a diff view between the fork point and the PR bookmark
   let main = (gh pr view (^jj log -r @- -T 'bookmarks' --no-graph) --json baseRefName | from json | get baseRefName)
   let base = (gh api repos/{owner}/{repo}/compare/($main)...($bookmark) --jq '.merge_base_commit.sha')
-  ^nvim -c $"DiffBanditReview ($base) ($bookmark)"
+  ^nvim -c $"lua require\('diffbandit').git { mode = 'all', base = '($base)' }"
 
   # After reviewing, clean up by forgetting the bookmark and returning to main
   ^jj bookmark forget $bookmark
